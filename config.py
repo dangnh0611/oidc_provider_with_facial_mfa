@@ -1,0 +1,5 @@
+FLASK_APP='app2.py'
+FLASK_ENV='production'
+SQLALCHEMY_DATABASE_URI='sqlite:///db.sqlite'
+SQLALCHEMY_TRACK_MODIFICATIONS=True
+DEBUG= False
