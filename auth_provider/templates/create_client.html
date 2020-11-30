@@ -1,0 +1,131 @@
+{% extends "dashboard.html" %}
+
+{% block pagestyles %}
+<link href="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.min.css" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/dashboardcontent.css') }}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block dashboardcontent %}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Create new Client</h1>
+  </div>
+</div>
+
+<div class='dashboardcontent'>
+  <div class="form-wrapper">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      {{ message }}
+    </div>
+    {% endfor %}
+
+    <form method="POST" action="/create_client">
+      {{ form.csrf_token }}
+
+      <fieldset class="email">
+        {{ form.client_name.label }}
+        {{ form.client_name(placeholder='') }}
+        {% if form.client_name.errors %}
+        <ul class="errors">
+          {% for error in form.client_name.errors %}
+          <li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </fieldset>
+
+      <fieldset>
+        {{ form.client_uri.label }}
+        {{ form.client_uri(placeholder='') }}
+        {% if form.client_uri.errors %}
+        <ul class="errors">
+          {% for error in form.client_uri.errors %}
+          <li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </fieldset>
+
+      <fieldset>
+        {{ form.redirect_uri.label }}
+        {{ form.redirect_uri}}
+        {% if form.redirect_uri.errors %}
+        <ul class="errors">
+          {% for error in form.redirect_uri.errors %}
+          <li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </fieldset>
+
+      <fieldset>
+        {{ form.allowed_scope.label }}
+        {{ form.allowed_scope(class="chosen-select")}}
+        {% if form.allowed_scope.errors %}
+        <ul class="errors">
+          {% for error in form.allowed_scope.errors %}
+          <li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </fieldset>
+
+      <fieldset>
+        {{ form.allowed_grant_type.label }}
+        {{ form.allowed_grant_type(class="chosen-select")}}
+        {% if form.allowed_grant_type.errors %}
+        <ul class="errors">
+          {% for error in form.allowed_grant_type.errors %}
+          <li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </fieldset>
+
+      <fieldset>
+        {{ form.allowed_response_type.label }}
+        {{ form.allowed_response_type(class="chosen-select")}}
+        {% if form.allowed_response_type.errors %}
+        <ul class="errors">
+          {% for error in form.allowed_response_type.errors %}
+          <li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </fieldset>
+
+      <fieldset>
+        {{ form.token_endpoint_auth_method.label }}
+        {{ form.token_endpoint_auth_method(class="chosen-select") }}
+        {% if form.token_endpoint_auth_method.errors %}
+        <ul class="errors">
+          {% for error in form.token_endpoint_auth_method.errors %}
+          <li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </fieldset>
+
+      <div class="submit-button">
+        {{ form.submit }}
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+
+{% endblock %}
+
+{% block additionalscripts %}
+<script src="{{ url_for('static', filename='js/main.min.js') }}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
+<script>
+  $(".chosen-select").chosen({
+    no_results_text: "Oops, nothing found!"
+  })
+</script>
+
+{% endblock %}

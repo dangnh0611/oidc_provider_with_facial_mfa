@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block pagestyles %}
+  <link href="{{ url_for('static', filename='css/account.css') }}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block content %}
+  <div class="form-wrapper">
+
+    <div class="logo">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="logo"/>
+    </div>
+
+    {% for message in get_flashed_messages() %}
+      <div class="alert alert-warning">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+      </div>
+    {% endfor %}
+
+    <h1>Access Request</h1>
+    <strong>{{grant.client.client_name}} ({{ grant.client.client_uri }}) want to access the following resources:</strong>
+    <ul>
+        {% for scope in scopes %}
+        <li> {{scope}} </li>
+        {% endfor %}
+    </ul>
+    <form method="POST" action="">
+      {{ form.csrf_token }}
+
+      <fieldset>
+        {{ form.confirm }} {{ form.confirm.label(style='display: inline') }}
+        {% if form.confirm.errors %}
+          <ul class="errors">
+            {% for error in form.confirm.errors %}
+              <li>{{ error }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </fieldset>
+      <div class="submit-button">
+        {{ form.submit }}
+      </div>
+
+
+    </form>
+  </div>
+{% endblock %}

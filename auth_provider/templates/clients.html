@@ -1,0 +1,44 @@
+{% extends "dashboard.html" %}
+
+{% block pagestyles %}
+<link href="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.min.css" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/dashboardcontent.css') }}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block dashboardcontent %}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Your Clients:</h1>
+    </div>
+</div>
+
+<div class='dashboardcontent'>
+    {{ user }}
+
+    {% for client in clients %}
+    <pre>
+        {{ client.client_info|tojson }}
+        {{ client.client_metadata|tojson }}
+    </pre>
+    <hr>
+    {% endfor %}
+
+</div>
+
+{% endblock %}
+
+{% block additionalscripts %}
+<script src="{{ url_for('static', filename='js/main.min.js') }}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
+<script>
+    $(".chosen-select").chosen({
+        no_results_text: "Oops, nothing found!"
+    })
+</script>
+
+{% endblock %}

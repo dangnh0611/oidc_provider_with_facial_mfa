@@ -2,12 +2,19 @@
 from . import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_sqlalchemy import SQLAlchemy
+from authlib.integrations.sqla_oauth2 import (
+    OAuth2ClientMixin,
+    OAuth2TokenMixin,
+    OAuth2AuthorizationCodeMixin
+)
+
 
 
 class User(UserMixin, db.Model):
 	"""User account model."""
 
-	__tablename__ = 'flasklogin-users'
+	__tablename__ = 'user'
 	id = db.Column(
 		db.Integer,
 		primary_key=True
@@ -55,5 +62,38 @@ class User(UserMixin, db.Model):
 		"""Check hashed password."""
 		return check_password_hash(self.password, password)
 
+	def get_user_id(self):
+		return self.id
+
 	def __repr__(self):
-		return '<User {}>'.format(self.username)
+		return self.name
+	
+	def __str__(self):
+		return self.name
+
+
+class OAuth2Client(db.Model, OAuth2ClientMixin):
+	__tablename__ = 'oauth2_client'
+
+	id = db.Column(db.Integer, primary_key=True)
+	user_id = db.Column(
+		db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+	user = db.relationship('User')
+
+
+class OAuth2AuthorizationCode(db.Model, OAuth2AuthorizationCodeMixin):
+	__tablename__ = 'oauth2_code'
+
+	id = db.Column(db.Integer, primary_key=True)
+	user_id = db.Column(
+		db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+	user = db.relationship('User')
+
+
+class OAuth2Token(db.Model, OAuth2TokenMixin):
+	__tablename__ = 'oauth2_token'
+
+	id = db.Column(db.Integer, primary_key=True)
+	user_id = db.Column(
+		db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+	user = db.relationship('User')
