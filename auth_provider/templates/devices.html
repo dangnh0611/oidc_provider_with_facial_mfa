@@ -1,0 +1,177 @@
+{% extends "dashboard.html" %}
+
+{% block pagestyles %}
+<link href="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.min.css" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/dashboardcontent.css') }}" rel="stylesheet" type="text/css">
+<style>
+  .loader {
+    border: 6px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 6px solid #3498db;
+    width: 60px;
+    height: 60px;
+    -webkit-animation: spin 2s linear infinite;
+    /* Safari */
+    animation: spin 2s linear infinite;
+  }
+
+  /* Safari */
+  @-webkit-keyframes spin {
+    0% {
+      -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+      -webkit-transform: rotate(360deg);
+    }
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block dashboardcontent %}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Devices manager</h1>
+  </div>
+</div>
+
+<div class='dashboardcontent'>
+  <div id='dashboard_content' class="form-wrapper">
+    <h1>Hello world!</h1>
+    <a id="add_new_device_btn" class="btn btn-success btn-sm"> Add new device </a>
+
+  </div>
+</div>
+
+
+
+
+
+{% endblock %}
+
+{% block additionalscripts %}
+<script src="{{ url_for('static', filename='js/main.min.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
+
+{% raw -%}
+<script id='show-device-template' type='text/template'>
+  <div>
+    <h1> Setup new device successfully! </h1>
+    <ul>
+      <li> <b>Device model:&nbsp</b> <p> {{data.device_model}} </p>  </li>
+      <li> <b>Operating system:&nbsp</b> <p> {{data.device_os}} </p> </li>
+    </ul>
+  </div>
+</script>
+{%- endraw %}
+
+
+{% raw -%}
+<script id='show-error-template' type='text/template'>
+  <div>
+    <h1> Setup new device failed! </h1>
+    <h1 style="color: red;"> {{ error }} </h1>
+  </div>
+</script>
+{%- endraw %}
+
+
+<script id='show-qr-template' type='text/template'>
+  <div>
+    <h1>Use your device with DoneLogin app installed to scan this QR code below</h1>
+    <p><img id="qrcode" src="{{ url_for('main_bp.qrcode') }}"></p>
+    <hr>
+    <div style="padding-left: 30px; ">
+      <div class="loader" style='display:inline-block;'></div>
+      <h3 style='display:inline-block; padding-left: 30px;' >Waiting for your device setup..</h3>
+    </div>
+  </div>
+
+  <script id = 'after-load-qr-script'>
+    content = document.querySelector("#dashboard_content");
+    const success_template = Handlebars.compile(
+      document.querySelector("#show-device-template").innerHTML);
+
+        // update task progress periodly using ajax
+    function updateProgress() {
+      ajax = new XMLHttpRequest();
+
+      ajax.onerror = function(){
+        const error_template = Handlebars.compile(
+            document.querySelector("#show-error-template").innerHTML);
+        clearInterval(document.querySelector('#qrcode').dataset.interval_id);
+        content.innerHTML= error_template({'error':'Connection Error!'});
+      }
+
+      ajax.onload = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          var data = JSON.parse(this.response);
+          if (data.status=='waiting'){}
+          else if (data.status=='fail'){
+            clearInterval(document.querySelector('#qrcode').dataset.interval_id);
+            const error_template = Handlebars.compile(
+            document.querySelector("#show-error-template").innerHTML);
+            content.innerHTML= error_template({'error': data.msg});
+          }
+          else if (data.status=='success'){
+            console.log(data);
+            clearInterval(document.querySelector('#qrcode').dataset.interval_id);
+            content.innerHTML= success_template({'data': data});
+          }
+          else {
+            clearInterval(document.querySelector('#qrcode').dataset.interval_id);
+          }
+        }
+        else {
+          clearInterval($("#qrcode").dataset.interval_id);
+          const error_template = Handlebars.compile(
+          document.querySelector("#show-error-template").innerHTML);
+          content.innerHTML= error_template({'error': 'Error connection to server.'});
+        }
+      }
+      ajax.open("GET", `/device_registration_status`, true);
+      ajax.send();
+    }
+    $("#qrcode").load(function() {
+      // Update tasks progress periodly
+      updateProgress();
+      var id = setInterval(updateProgress, 2000);
+      document.querySelector('#qrcode').dataset.interval_id = id;
+    })
+
+
+  </script>
+</script>
+
+
+</div>
+</script>
+
+<script>
+  add_new_device_btn = document.querySelector("#add_new_device_btn");
+  add_new_device_btn.onclick = function () {
+    content = document.querySelector("#dashboard_content");
+    const template = Handlebars.compile(
+      document.querySelector("#show-qr-template").innerHTML);
+    content.innerHTML = template();
+    eval(document.querySelector("#after-load-qr-script").innerHTML);
+  }
+</script>
+
+{% endblock %}

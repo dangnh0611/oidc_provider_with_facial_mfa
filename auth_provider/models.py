@@ -8,6 +8,8 @@ from authlib.integrations.sqla_oauth2 import (
     OAuth2TokenMixin,
     OAuth2AuthorizationCodeMixin
 )
+import json
+from datetime import datetime
 
 
 
@@ -72,6 +74,52 @@ class User(UserMixin, db.Model):
 		return self.name
 
 
+class TokenDevice(db.Model):
+	__tablename__= "token_device"
+	id = db.Column(
+		db.Integer,
+		primary_key=True
+	)
+	public_key = db.Column(
+		db.String(200),
+		primary_key=False,
+		unique=False,
+		nullable=False
+	)
+	name = db.Column(
+		db.String(100),
+		nullable=True,
+		unique=False
+	)
+
+	os = db.Column(
+		db.String(100),
+		nullable=True,
+		unique=False
+	)
+
+	def __str__(self):
+		return self.name
+
+	def get_id(self):
+		return self.id
+
+
+class UserTokenDevice(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+
+	user_id = db.Column(
+		db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+	user = db.relationship('User')
+
+	token_device_id = db.Column(db.Integer, primary_key=True)
+	token_device_id = db.Column(
+		db.Integer, db.ForeignKey('token_device.id', ondelete='CASCADE'))
+	token_device = db.relationship('TokenDevice')
+
+
+
+
 class OAuth2Client(db.Model, OAuth2ClientMixin):
 	__tablename__ = 'oauth2_client'
 
@@ -97,3 +145,26 @@ class OAuth2Token(db.Model, OAuth2TokenMixin):
 	user_id = db.Column(
 		db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
 	user = db.relationship('User')
+
+
+class Registration:
+	# invalid after 30 minutes
+	EXPIRE = 1800
+
+	def __init__(self, code):
+		self.code = code
+		self.start_at = datetime.now()
+		self.success = False
+
+	def update_metadata(self, metadata):
+		self.device_model = metadata['device_model']
+		self.device_os = metadata['device_os']
+
+	def is_expired(self):
+		now= datetime.now()
+		delta = now - self.start_at
+		return delta.seconds > self.EXPIRE
+
+	def is_success(self):
+		return self.success
+	

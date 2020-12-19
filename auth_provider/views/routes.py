@@ -1,11 +1,15 @@
 """Logged-in page routes."""
-from flask import Blueprint, render_template, redirect, url_for, request
+from flask import Blueprint, render_template, redirect, url_for, request, session, jsonify
 from flask_login import current_user, login_required, logout_user
-from ..models import OAuth2Client
+from ..models import OAuth2Client, Registration, TokenDevice
 from ..forms import CreateClientForm
 from werkzeug.security import gen_salt
 import time
 from .. import db
+import json
+import pyqrcode
+import io
+from werkzeug.security import gen_salt
 
 
 # Blueprint Configuration
@@ -14,6 +18,9 @@ main_bp = Blueprint(
     template_folder='templates',
     static_folder='static'
 )
+
+global registrations
+registrations = {}
 
 
 @main_bp.route('/', methods=['GET'])
@@ -98,6 +105,82 @@ def clients():
         clients = []
 
     return render_template('clients.html', profile={'username': user}, clients=clients)
+
+@main_bp.route('/devices', methods=['GET'])
+@login_required
+def devices():
+    user = current_user
+    return render_template('devices.html', profile={'username': user} )
+
+
+@main_bp.route('/qrcode', methods=['GET'])
+@login_required
+def qrcode():
+    global registrations
+    msg={'name':'Nguyen Hong Dang'}
+    code = gen_salt(48)
+    msg['code'] = code
+    session['code']=code
+    session.modified = True
+    new_regist = Registration(code)
+    registrations[code] = new_regist
+    print('NEW REGIST: ', code)
+
+    # render QR code
+    qr_content = json.dumps(msg)
+    url = pyqrcode.create(qr_content)
+    stream = io.BytesIO()
+    url.svg(stream, scale=5)
+    return stream.getvalue(), 200, {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'}
+
+@main_bp.route('/device_registration_status', methods=['GET'])
+@login_required
+def device_registration_status():
+    global registrations
+    if 'code' not in session:
+        # an attack, log this
+        return jsonify({'status': 'fail', 'msg': 'Invalid cookies! Attack detected!'})
+    code = session['code']
+    if code not in registrations:
+        return jsonify({'status': 'fail', 'msg': 'Client send an invalid cookies or a registration timeout occur !'})
+    else:
+        regist = registrations[code]
+        if regist.is_success():
+            del registrations[code]
+            del session['code']
+            return jsonify({'status': 'success',  'device_model': regist.device_model, 'device_os': regist.device_os})
+        else:
+            return jsonify({'status': 'waiting'})
+
+
+
+@main_bp.route('/device_registration', methods=['POST'])
+def device_registration():
+    global registrations
+    data= request.json
+    if 'code' not in data:
+        return jsonify({'status': 'fail', 'msg': 'No code found !'})
+    else:
+        code = data['code']
+        if code not in registrations:
+            # may be an attack, log
+            return jsonify({'status': 'fail', 'msg': 'Code is invalid !'})
+        else:
+            regist = registrations[code]
+            if regist.is_success():
+                return jsonify({'status': 'fail', 'msg': 'Registration has been success yet !'})
+            if regist.is_expired():
+                del registrations[code]
+                return jsonify({'status': 'fail', 'msg': 'Registration session is expired!'})
+            else:
+                
+                regist.update_metadata(data)
+                regist.success= True
+                return jsonify({'status': 'success'})
 
 
 @main_bp.route("/test")
