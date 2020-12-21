@@ -109,6 +109,11 @@ class TokenDevice(db.Model):
 		nullable=True,
 		unique=False
 	)
+	fcm_token = db.Column(
+		db.String(200),
+		nullable=False,
+		unique=False
+	)
 	is_active = db.Column(
 		db.Boolean,
 		index = False,
