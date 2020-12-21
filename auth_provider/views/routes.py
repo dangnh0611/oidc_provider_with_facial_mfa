@@ -1,8 +1,9 @@
 """Logged-in page routes."""
-from flask import Blueprint, render_template, redirect, url_for, request, session, jsonify
+from flask import Blueprint, render_template, redirect, url_for, request, session, jsonify, flash
 from flask_login import current_user, login_required, logout_user
-from ..models import OAuth2Client, Registration, TokenDevice
-from ..forms import CreateClientForm
+from ..models import OAuth2Client, Registration, TokenDevice, User
+from ..forms import CreateClientForm, MFASettingForm
+from ..helper import verify_signature
 from werkzeug.security import gen_salt
 import time
 from .. import db
@@ -10,7 +11,7 @@ import json
 import pyqrcode
 import io
 from werkzeug.security import gen_salt
-
+from datetime import datetime
 
 # Blueprint Configuration
 main_bp = Blueprint(
@@ -27,12 +28,12 @@ registrations = {}
 @login_required
 def dashboard():    
     """Logged-in User Dashboard."""
-    print(current_user.id)
+    user= current_user
     return render_template(
         'dashboard.html',
         title='Dashboard',
         template='dashboard-template',
-        profile={'username': current_user},
+        user= user,
         body="You are now logged in!"
     )
 
@@ -89,7 +90,7 @@ def create_client():
             'create_client.html',
             title='Create a client.',
             form=form,
-            profile={'username': current_user},
+            user= user,
             template='signup-page',
         )
 
@@ -104,25 +105,31 @@ def clients():
     else:
         clients = []
 
-    return render_template('clients.html', profile={'username': user}, clients=clients)
+    return render_template('clients.html', user = user, clients=clients)
 
 @main_bp.route('/devices', methods=['GET'])
 @login_required
 def devices():
     user = current_user
-    return render_template('devices.html', profile={'username': user} )
+    token_devices = user.token_devices
+    return render_template('devices.html', user=user, token_devices = token_devices)
 
 
 @main_bp.route('/qrcode', methods=['GET'])
 @login_required
 def qrcode():
     global registrations
-    msg={'name':'Nguyen Hong Dang'}
+    user = current_user
     code = gen_salt(48)
-    msg['code'] = code
+    msg = {
+        "code": code,
+        "user_id": user.get_user_id(),
+        "username": user.name,
+        "email": user.email,
+    }
     session['code']=code
     session.modified = True
-    new_regist = Registration(code)
+    new_regist = Registration(code, current_user.get_user_id())
     registrations[code] = new_regist
     print('NEW REGIST: ', code)
 
@@ -162,10 +169,20 @@ def device_registration_status():
 def device_registration():
     global registrations
     data= request.json
+
     if 'code' not in data:
         return jsonify({'status': 'fail', 'msg': 'No code found !'})
     else:
         code = data['code']
+        # check signature
+        public_key = data['public_key']
+        signed_code = data['code_signature']
+
+        is_valid_signature = verify_signature(public_key, signed_code, code)
+        print('VERIFY', is_valid_signature)
+        if not is_valid_signature:
+            return jsonify({'status': 'fail', 'msg': 'Invalid signature !'})
+
         if code not in registrations:
             # may be an attack, log
             return jsonify({'status': 'fail', 'msg': 'Code is invalid !'})
@@ -177,10 +194,60 @@ def device_registration():
                 del registrations[code]
                 return jsonify({'status': 'fail', 'msg': 'Registration session is expired!'})
             else:
-                
+                # main flow, save info to db
+                user_id = regist.get_user_id()
+                token_device = TokenDevice(user_id = user_id, public_key=data['public_key'] , is_active = True,
+                 device_model = data['device_model'] , device_os = data['device_os'],
+                  created_at = datetime.now(), updated_at = datetime.now(), last_login = datetime.now())
+                db.session.add(token_device)
+                db.session.commit()
+
                 regist.update_metadata(data)
                 regist.success= True
-                return jsonify({'status': 'success'})
+                return jsonify({'status': 'success', 'device_id': token_device.get_id()})
+
+
+
+@main_bp.route('/mfa_setup', methods=['GET', 'POST'])
+@login_required
+def mfa_setup():
+    form = MFASettingForm()
+    user = current_user
+    # Validate login attempt
+    if form.validate_on_submit():
+        if form.mfa.data == user.mfa:
+            flash('Nothing changed!')
+        if form.mfa.data == False and user.mfa == True:
+            user.mfa = False
+            db.session.add(user)
+            db.session.commit()
+            flash('Turned off 2FA successfully !')
+        if form.mfa.data ==True and user.mfa == False:
+            devices = user.token_devices
+            active_devices = [device for device in devices if device.is_active ]
+            if len(active_devices)==0:
+                flash('Error: You have no active token device. Setup a new device to enable 2FA')
+            else:
+                user.mfa = True
+                db.session.add(user)
+                db.session.commit()
+                flash('Enabled MFA successfully ! You can now use your token device for 2FA.')
+    
+    # GET
+    form.mfa.default = user.mfa
+    form.process()
+    return render_template(
+        'mfa_setup.html',
+        user = user,
+        title='MFA Setting',
+        form=form,
+        template='signup-page',
+        body="Sign up for a user account."
+    )
+
+            
+
+
 
 
 @main_bp.route("/test")

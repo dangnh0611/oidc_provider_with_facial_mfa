@@ -51,8 +51,48 @@
 
 <div class='dashboardcontent'>
   <div id='dashboard_content' class="form-wrapper">
-    <h1>Hello world!</h1>
-    <a id="add_new_device_btn" class="btn btn-success btn-sm"> Add new device </a>
+    <a id="add_new_device_btn" class="btn btn-primary btn-icon-split btn-lg">
+      <span class="icon text-white-50">
+          <i class="fas fa-mobile-alt"></i>
+      </span>
+      <span class="text">Add new device</span>
+  </a>
+    <h1 style='margin-top: 50px;'>Your devices </h1>
+    {% for device in token_devices %}
+      <div class="card shadow" style="width: 40%; margin-bottom: 10px;">
+        <!-- Card Header - Dropdown -->
+        <div
+            class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">{{ device.device_model}}</h6>
+            <div class="dropdown no-arrow">
+                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                    aria-labelledby="dropdownMenuLink">
+                    <div class="dropdown-header">Actions</div>
+                    <a class="dropdown-item" href="#">Detail</a>
+                    <a class="dropdown-item" href="#">Disable</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Delete</a>
+                </div>
+            </div>
+        </div>
+        <!-- Card Body -->
+        <div class="card-body" style="padding: 5px;">
+            <ul>
+              <li><b>Operating system:&nbsp</b>  {{ device.device_os }} </li>
+              <li><b>Register at:&nbsp</b> {{ device.created_at.strftime("%m/%d/%Y, %H:%M:%S")}} </li>
+              <li><b>Last used:&nbsp</b> {{ device.last_login.strftime("%m/%d/%Y, %H:%M:%S")}} </li>
+            </ul>
+        </div>
+    </div>
+
+
+    {% endfor %}
+
+                              
 
   </div>
 </div>

@@ -11,8 +11,6 @@ from authlib.integrations.sqla_oauth2 import (
 import json
 from datetime import datetime
 
-
-
 class User(UserMixin, db.Model):
 	"""User account model."""
 
@@ -55,6 +53,16 @@ class User(UserMixin, db.Model):
 		unique=False,
 		nullable=True
 	)
+	mfa = db.Column(
+		db.Boolean,
+		index = False,
+		unique = False,
+		nullable = False,
+		default = False
+	)
+
+	token_devices = db.relationship('TokenDevice', lazy='select',
+        backref=db.backref('user', lazy='select'))
 
 	def set_password(self, password):
 		"""Create hashed password."""
@@ -75,27 +83,56 @@ class User(UserMixin, db.Model):
 
 
 class TokenDevice(db.Model):
-	__tablename__= "token_device"
+	__tablename__= "tokendevice"
 	id = db.Column(
 		db.Integer,
 		primary_key=True
 	)
+
+	user_id = db.Column(
+		db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+
 	public_key = db.Column(
-		db.String(200),
+		db.String(512),
 		primary_key=False,
 		unique=False,
 		nullable=False
 	)
-	name = db.Column(
+	device_model = db.Column(
 		db.String(100),
 		nullable=True,
 		unique=False
 	)
 
-	os = db.Column(
+	device_os = db.Column(
 		db.String(100),
 		nullable=True,
 		unique=False
+	)
+	is_active = db.Column(
+		db.Boolean,
+		index = False,
+		unique = False,
+		nullable = False,
+		default = True
+	)
+	created_at = db.Column(
+		db.DateTime,
+		index=False,
+		unique=False,
+		nullable=False
+	)
+	updated_at = db.Column(
+		db.DateTime,
+		index=False,
+		unique=False,
+		nullable=True
+	)
+	last_login = db.Column(
+		db.DateTime,
+		index=False,
+		unique=False,
+		nullable=False
 	)
 
 	def __str__(self):
@@ -103,20 +140,6 @@ class TokenDevice(db.Model):
 
 	def get_id(self):
 		return self.id
-
-
-class UserTokenDevice(db.Model):
-	id = db.Column(db.Integer, primary_key=True)
-
-	user_id = db.Column(
-		db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-	user = db.relationship('User')
-
-	token_device_id = db.Column(db.Integer, primary_key=True)
-	token_device_id = db.Column(
-		db.Integer, db.ForeignKey('token_device.id', ondelete='CASCADE'))
-	token_device = db.relationship('TokenDevice')
-
 
 
 
@@ -151,10 +174,14 @@ class Registration:
 	# invalid after 30 minutes
 	EXPIRE = 1800
 
-	def __init__(self, code):
+	def __init__(self, code, user_id):
+		self.user_id = user_id
 		self.code = code
 		self.start_at = datetime.now()
 		self.success = False
+
+	def get_user_id(self):
+		return self.user_id
 
 	def update_metadata(self, metadata):
 		self.device_model = metadata['device_model']

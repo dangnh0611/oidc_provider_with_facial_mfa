@@ -1,0 +1,133 @@
+{% extends "dashboard.html" %}
+
+{% block pagestyles %}
+<link href="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.min.css" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/dashboardcontent.css') }}" rel="stylesheet" type="text/css">
+
+<style>
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+    
+    .switch input { 
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+    
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+    
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+    
+    input:checked + .slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+    
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 34px;
+    }
+    
+    .slider.round:before {
+      border-radius: 50%;
+    }
+    </style>
+
+{% endblock %}
+
+{% block dashboardcontent %}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Create new Client</h1>
+  </div>
+</div>
+
+<div class='dashboardcontent'>
+  <div class="form-wrapper">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      {{ message }}
+    </div>
+    {% endfor %}
+
+    <form method="POST" action="/mfa_setup">
+      {{ form.csrf_token }}
+
+      <fieldset>
+        {{ form.mfa.label }}
+        <label class="switch">
+            {{ form.mfa }}
+            <span class="slider round"></span>
+        </label>
+        
+        {% if form.mfa.errors %}
+        <ul class="errors">
+          {% for error in form.mfa.errors %}
+          <li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </fieldset>
+
+      <div class="submit-button">
+        {{ form.submit }}
+
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+
+{% endblock %}
+
+{% block additionalscripts %}
+<script src="{{ url_for('static', filename='js/main.min.js') }}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
+<script>
+  $(".chosen-select").chosen({
+    no_results_text: "Oops, nothing found!"
+  })
+</script>
+
+{% endblock %}

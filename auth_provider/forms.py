@@ -94,3 +94,14 @@ class CreateClientForm(FlaskForm):
         choices=[('none', 'none'), ('client_secret_post', 'client_secret_post'), ('client_secret_basic', 'client_secret_basic')]
     )
     submit = SubmitField('Submit')
+
+
+
+class MFASettingForm(FlaskForm):
+
+    mfa = BooleanField(
+        'Enable 2FA',
+        validators=[],
+        default= False
+    )
+    submit = SubmitField('Submit')
