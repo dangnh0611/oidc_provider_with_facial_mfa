@@ -2,17 +2,20 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_session import Session
 
 
 
 db = SQLAlchemy()
 login_manager = LoginManager()
+sess = Session()
 
 
 def create_app():
     """Construct the core app object."""
     app = Flask(__name__, instance_relative_config=True)
-    
+    app.config['SESSION_TYPE']= 'sqlalchemy'
+    app.config['SESSION_SQLALCHEMY'] = db
     # Configurations 
     app.config.from_object('config')
     app.config.from_pyfile('config.py')
@@ -20,6 +23,7 @@ def create_app():
     # Initialize Plugins
     db.init_app(app)
     login_manager.init_app(app)
+    sess.init_app(app)
 
     with app.app_context():
         from .views import auth, routes, oidc_endpoint
