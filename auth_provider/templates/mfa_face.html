@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+
+{% block pagestyles %}
+  <link href="{{ url_for('static', filename='css/account.css') }}" rel="stylesheet" type="text/css">
+
+  <style>
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 6px solid #3498db;
+      width: 60px;
+      height: 60px;
+      -webkit-animation: spin 2s linear infinite;
+      /* Safari */
+      animation: spin 2s linear infinite;
+    }
+  
+    /* Safari */
+    @-webkit-keyframes spin {
+      0% {
+        -webkit-transform: rotate(0deg);
+      }
+  
+      100% {
+        -webkit-transform: rotate(360deg);
+      }
+    }
+  
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+  
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+  
+{% endblock %}
+
+{% block content %}
+  <div class="form-wrapper">
+
+    <div class="logo">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="logo"/>
+    </div>
+    <div id = 'main-div'>
+      {% for message in get_flashed_messages() %}
+      <div class="alert alert-warning">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+      </div>
+    {% endfor %}
+
+    <h1>Two Factor Authentication</h1>
+    <div style="padding-left: 30px; ">
+      <div class="loader" style='display:inline-block;'></div>
+      <h3 style='display:inline-block; padding-left: 30px;' >Waiting for facial unlock..</h3>
+    </div>
+
+    </div>
+  </div>
+{% endblock %}
+
+{% block additionalscripts %}
+
+{% raw -%}
+<script id='show-error-template' type='text/template'>
+  <div id = 'sub-div'>
+    <h1> Facial authentication failed! </h1>
+    <h1 style="color: red;"> {{ error }} </h1>
+  </div>
+</script>
+{%- endraw %}
+
+<script>
+  function updateProgress() {
+  ajax = new XMLHttpRequest();
+  content = document.querySelector("#main-div");
+
+  ajax.onerror = function(){
+    const error_template = Handlebars.compile(
+        document.querySelector("#show-error-template").innerHTML);
+    clearInterval(document.querySelector('#main-div').dataset.interval_id);
+    content.innerHTML= error_template({'error':'Connection Error!'});
+  }
+
+  ajax.onload = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      var data = JSON.parse(this.response);
+      if (data.status=='waiting'){}
+      else if (data.status=='fail'){
+        clearInterval(document.querySelector('#main-div').dataset.interval_id);
+        const error_template = Handlebars.compile(
+        document.querySelector("#show-error-template").innerHTML);
+        content.innerHTML= error_template({'error': data.msg});
+      }
+      else if (data.status=='success'){
+        // redirect to next_page
+        window.location.replace(data.next_page);
+      }
+      else {
+        clearInterval(document.querySelector('#main-div').dataset.interval_id);
+      }
+    }
+    else {
+      clearInterval($("#main-div").dataset.interval_id);
+      const error_template = Handlebars.compile(
+      document.querySelector("#show-error-template").innerHTML);
+      content.innerHTML= error_template({'error': 'Error connection to server.'});
+    }
+  }
+  ajax.open("GET", `/login_2fa_status`, true);
+  ajax.send();
+}
+
+// Update tasks progress periodly
+updateProgress();
+var id = setInterval(updateProgress, 2000);
+document.querySelector('#main-div').dataset.interval_id = id;
+
+</script>
+
+{% endblock %}

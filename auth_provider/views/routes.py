@@ -197,7 +197,7 @@ def device_registration():
                 # main flow, save info to db
                 user_id = regist.get_user_id()
                 token_device = TokenDevice(user_id = user_id, public_key=data['public_key'] , is_active = True,
-                 device_model = data['device_model'] , device_os = data['device_os'],
+                 device_model = data['device_model'] , device_os = data['device_os'], fcm_token = data['fcm_token'],
                   created_at = datetime.now(), updated_at = datetime.now(), last_login = datetime.now())
                 db.session.add(token_device)
                 db.session.commit()
@@ -211,6 +211,7 @@ def device_registration():
 @main_bp.route('/mfa_setup', methods=['GET', 'POST'])
 @login_required
 def mfa_setup():
+    print(session)
     form = MFASettingForm()
     user = current_user
     # Validate login attempt
@@ -246,7 +247,6 @@ def mfa_setup():
     )
 
             
-
 
 
 

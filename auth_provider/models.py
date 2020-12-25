@@ -199,4 +199,28 @@ class Registration:
 
 	def is_success(self):
 		return self.success
+
+
+
+class MFARequest:
+	# invalid after 30 minutes
+	EXPIRE = 1800
+
+	def __init__(self, mfa_code, user_id, next_page):
+		self.user_id = user_id
+		self.mfa_code = mfa_code
+		self.start_at = datetime.now()
+		self.success = False
+		self.next_page = next_page
+
+	def get_user_id(self):
+		return self.user_id
+
+	def is_expired(self):
+		now= datetime.now()
+		delta = now - self.start_at
+		return delta.seconds > self.EXPIRE
+
+	def is_success(self):
+		return self.success
 	

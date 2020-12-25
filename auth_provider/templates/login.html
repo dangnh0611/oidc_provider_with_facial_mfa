@@ -8,7 +8,7 @@
   <div class="form-wrapper">
 
     <div class="logo">
-      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="logo"/>
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="logo" style='width:100px; height: 100px;'/>
     </div>
 
     {% for message in get_flashed_messages() %}
@@ -20,7 +20,7 @@
 
     <h1>Log In</h1>
 
-    <form method="POST" action="/login">
+    <form method="POST" action="{{ url_for('auth_bp.login', next = next_url) }}">
       {{ form.csrf_token }}
 
       <fieldset class="email">

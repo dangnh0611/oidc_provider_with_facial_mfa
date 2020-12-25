@@ -17,7 +17,7 @@ message = messaging.Message(
         'score': '850',
         'time': '2:45',
     },
-    token=registration_token,
+    token=registration_token
 )
 
 # Send a message to the device corresponding to the provided
