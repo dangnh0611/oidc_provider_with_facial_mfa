@@ -17,14 +17,23 @@ from authlib.oidc.core import UserInfo
 from werkzeug.security import gen_salt
 from .models import db, User
 from .models import OAuth2Client, OAuth2AuthorizationCode, OAuth2Token
+from authlib.oauth2.rfc7636 import CodeChallenge
+from authlib.jose import JsonWebKey
 
 
-DUMMY_JWT_CONFIG = {
-    'key': 'secret-key',
-    'alg': 'HS256',
-    'iss': 'https://authlib.org',
-    'exp': 3600,
-}
+DUMMY_JWT_CONFIG = {}
+
+with open('jwtRS256.key', 'rb') as f:
+    key_data = f.read()
+    key = JsonWebKey.import_key(key_data, options= {'kty': 'RSA'})
+    key_info = key.as_dict()
+    key_info.update({'use': 'sig', 'alg': 'RS256', 'kid': 'the-constant-one' })
+    DUMMY_JWT_CONFIG = {
+        'key': key_info,
+        'alg': 'RS256',
+        'iss': 'https://donelogin.ai',
+        'exp': 3600,
+    }
 
 def exists_nonce(nonce, req):
     exists = OAuth2AuthorizationCode.query.filter_by(
@@ -121,7 +130,8 @@ def config_oauth(app):
 
     # support all openid grants
     authorization.register_grant(AuthorizationCodeGrant, [
-        OpenIDCode(require_nonce=True),
+        OpenIDCode(require_nonce=True)
+        # ,CodeChallenge(required=False)
     ])
     authorization.register_grant(ImplicitGrant)
     authorization.register_grant(HybridGrant)

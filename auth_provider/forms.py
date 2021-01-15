@@ -127,7 +127,7 @@ class CreateClientForm(FlaskForm):
         validators=[DataRequired()], 
         choices=[('none', 'none'), ('client_secret_post', 'client_secret_post'), ('client_secret_basic', 'client_secret_basic')]
     )
-    _submit = SubmitField('Submit')
+    submit = SubmitField('Submit')
 
 
 

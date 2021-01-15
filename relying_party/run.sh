@@ -1,0 +1,1 @@
+export CURL_CA_BUNDLE=""

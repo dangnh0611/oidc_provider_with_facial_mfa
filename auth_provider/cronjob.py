@@ -5,7 +5,7 @@ from flask import current_app
 from datetime import datetime, timedelta
 
 # in seconds
-CRON_INTERVAL = 5
+CRON_INTERVAL = 60
 
 def is_expired(start, now, expire = 300):
     min_start = now - timedelta(seconds= expire)

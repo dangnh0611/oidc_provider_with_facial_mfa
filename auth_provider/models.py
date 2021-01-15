@@ -183,9 +183,17 @@ class OAuth2Token(db.Model, OAuth2TokenMixin):
 	user = db.relationship('User')
 
 
+class AuthorizedClientUser(db.Model):
+	user_id = db.Column(
+		db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key = True)
+	client_id = db.Column(
+		db.Integer, db.ForeignKey('oauth2_client.id', ondelete='CASCADE'), primary_key = True)
+
+
+
 class RegistrationRequest(db.Model):
 	# invalid after 30 minutes
-	EXPIRE = 30
+	EXPIRE = 300
 	
 	id = db.Column(db.Integer, primary_key=True)
 
@@ -241,7 +249,7 @@ class RegistrationRequest(db.Model):
 
 class AccessRequest(db.Model):
 	# invalid after 5 minutes
-	EXPIRE = 30
+	EXPIRE = 300
 
 	id = db.Column(db.Integer, primary_key=True)
 
