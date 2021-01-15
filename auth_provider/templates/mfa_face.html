@@ -43,7 +43,7 @@
   <div class="form-wrapper">
 
     <div class="logo">
-      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="logo"/>
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="logo" style='width:100px; height: 100px;' />
     </div>
     <div id = 'main-div'>
       {% for message in get_flashed_messages() %}
@@ -64,6 +64,7 @@
 {% endblock %}
 
 {% block additionalscripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
 
 {% raw -%}
 <script id='show-error-template' type='text/template'>
@@ -98,7 +99,13 @@
       }
       else if (data.status=='success'){
         // redirect to next_page
-        window.location.replace(data.next_page);
+        var url = new URL(window.location.href);
+        var next = url.searchParams.get("next");
+        console.log(next);
+        if(next===null){
+          next = "{{ url_for('main_bp.dashboard') }}"
+        }
+        window.location.replace(next);
       }
       else {
         clearInterval(document.querySelector('#main-div').dataset.interval_id);

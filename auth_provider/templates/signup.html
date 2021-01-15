@@ -5,6 +5,13 @@
 {% endblock %}
 
 {% block content %}
+  <script>
+    function onSubmitCallback(token) {
+        console.log('abcd');
+        document.querySelector('#form').submit();
+    }
+  </script>
+
   <div class="form-wrapper">
 
     <div class="logo">
@@ -20,12 +27,12 @@
 
     <h1>Sign Up</h1>
 
-    <form method="POST" action="/signup">
+    <form id= 'form' method="POST" action="/signup">
       {{ form.csrf_token }}
 
       <fieldset class="name">
         {{ form.name.label }}
-        {{ form.name(placeholder='John Smith') }}
+        {{ form.name(placeholder='Your Full Name') }}
         {% if form.name.errors %}
           <ul class="errors">
             {% for error in form.email.errors %}
@@ -67,8 +74,12 @@
         {% endif %}
       </fieldset>
 
+      <fieldset>
+        {{ form.recaptcha }}
+      </fieldset>
+
       <div class="submit-button">
-        {{ form.submit }}
+        {{ form.signup_submit(id='submit-btn')}}
       </div>
 
     </form>
@@ -77,4 +88,8 @@
       <span>Already have an account? <a href="{{ url_for('auth_bp.login') }}">Log in.</a></span>
     </div>
   </div>
+{% endblock %}
+
+{% block additionalscripts %}
+
 {% endblock %}

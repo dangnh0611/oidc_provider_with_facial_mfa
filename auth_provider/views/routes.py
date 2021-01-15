@@ -1,7 +1,7 @@
 """Logged-in page routes."""
 from flask import Blueprint, render_template, redirect, url_for, request, session, jsonify, flash
 from flask_login import current_user, login_required, logout_user
-from ..models import OAuth2Client, Registration, TokenDevice, User
+from ..models import OAuth2Client, RegistrationRequest, TokenDevice, User
 from ..forms import CreateClientForm, MFASettingForm
 from ..helper import verify_signature
 from werkzeug.security import gen_salt
@@ -19,9 +19,6 @@ main_bp = Blueprint(
     template_folder='templates',
     static_folder='static'
 )
-
-global registrations
-registrations = {}
 
 
 @main_bp.route('/', methods=['GET'])
@@ -118,7 +115,6 @@ def devices():
 @main_bp.route('/qrcode', methods=['GET'])
 @login_required
 def qrcode():
-    global registrations
     user = current_user
     code = gen_salt(48)
     msg = {
@@ -129,8 +125,9 @@ def qrcode():
     }
     session['code']=code
     session.modified = True
-    new_regist = Registration(code, current_user.get_user_id())
-    registrations[code] = new_regist
+    new_regist = RegistrationRequest(private_code= code, user_id = current_user.get_user_id(), start_at = datetime.now(), is_success = False)
+    db.session.add(new_regist)
+    db.session.commit()
     print('NEW REGIST: ', code)
 
     # render QR code
@@ -147,19 +144,19 @@ def qrcode():
 @main_bp.route('/device_registration_status', methods=['GET'])
 @login_required
 def device_registration_status():
-    global registrations
     if 'code' not in session:
         # an attack, log this
         return jsonify({'status': 'fail', 'msg': 'Invalid cookies! Attack detected!'})
     code = session['code']
-    if code not in registrations:
-        return jsonify({'status': 'fail', 'msg': 'Client send an invalid cookies or a registration timeout occur !'})
+    regist = RegistrationRequest.query.filter_by(private_code = code).first()
+    if regist is None:
+        return jsonify({'status': 'fail', 'msg': 'Registration time-out error !'})
     else:
-        regist = registrations[code]
-        if regist.is_success():
-            del registrations[code]
+        if regist.is_success:
+            db.session.delete(regist)
+            db.session.commit()
             del session['code']
-            return jsonify({'status': 'success',  'device_model': regist.device_model, 'device_os': regist.device_os})
+            return jsonify({'status': 'success',  'device_model': regist.metadata_device_model, 'device_os': regist.metadata_device_os})
         else:
             return jsonify({'status': 'waiting'})
 
@@ -167,7 +164,6 @@ def device_registration_status():
 
 @main_bp.route('/device_registration', methods=['POST'])
 def device_registration():
-    global registrations
     data= request.json
 
     if 'code' not in data:
@@ -183,19 +179,20 @@ def device_registration():
         if not is_valid_signature:
             return jsonify({'status': 'fail', 'msg': 'Invalid signature !'})
 
-        if code not in registrations:
+        regist = RegistrationRequest.query.filter_by(private_code = code).first()
+        if regist is None:
             # may be an attack, log
             return jsonify({'status': 'fail', 'msg': 'Code is invalid !'})
         else:
-            regist = registrations[code]
-            if regist.is_success():
+            if regist.is_success:
                 return jsonify({'status': 'fail', 'msg': 'Registration has been success yet !'})
-            if regist.is_expired():
-                del registrations[code]
+            if regist.check_expired():
+                db.session.delete(regist)
+                db.session.commit()
                 return jsonify({'status': 'fail', 'msg': 'Registration session is expired!'})
             else:
                 # main flow, save info to db
-                user_id = regist.get_user_id()
+                user_id = regist.user_id
                 token_device = TokenDevice(user_id = user_id, public_key=data['public_key'] , is_active = True,
                  device_model = data['device_model'] , device_os = data['device_os'], fcm_token = data['fcm_token'],
                   created_at = datetime.now(), updated_at = datetime.now(), last_login = datetime.now())
@@ -203,9 +200,10 @@ def device_registration():
                 db.session.commit()
 
                 regist.update_metadata(data)
-                regist.success= True
+                regist.is_success= True
+                db.session.add(regist)
+                db.session.commit()
                 return jsonify({'status': 'success', 'device_id': token_device.get_id()})
-
 
 
 @main_bp.route('/mfa_setup', methods=['GET', 'POST'])
@@ -230,6 +228,7 @@ def mfa_setup():
                 flash('Error: You have no active token device. Setup a new device to enable 2FA')
             else:
                 user.mfa = True
+                user.updated_at = datetime.now()
                 db.session.add(user)
                 db.session.commit()
                 flash('Enabled MFA successfully ! You can now use your token device for 2FA.')
@@ -245,9 +244,6 @@ def mfa_setup():
         template='signup-page',
         body="Sign up for a user account."
     )
-
-            
-
 
 
 @main_bp.route("/test")

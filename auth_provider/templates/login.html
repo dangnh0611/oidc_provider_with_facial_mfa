@@ -20,7 +20,7 @@
 
     <h1>Log In</h1>
 
-    <form method="POST" action="{{ url_for('auth_bp.login', next = next_url) }}">
+    <form id='form' method="POST" action="{{ url_for('auth_bp.login', next = next_url) }}">
       {{ form.csrf_token }}
 
       <fieldset class="email">
@@ -45,8 +45,12 @@
         {% endif %}
       </fieldset>
 
-      <div class="submit-button">
-        {{ form.submit }}
+      <fieldset>
+        {{ form.recaptcha }}
+      </fieldset>
+      
+      <div id = 'submit-btn' class="submit-button">
+        {{ form.login_submit(id='submit-btn') }}
       </div>
 
       <div class="login-signup">
@@ -55,4 +59,12 @@
 
     </form>
   </div>
+{% endblock %}
+
+{% block additionalscripts %}
+<script>
+  function onSubmitCallback(token) {
+      document.getElementById("form").submit();
+  }
+</script>
 {% endblock %}

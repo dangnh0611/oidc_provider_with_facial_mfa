@@ -60,13 +60,20 @@ class User(UserMixin, db.Model):
 		nullable = False,
 		default = False
 	)
+	is_confirmed = db.Column(
+		db.Boolean,
+		index = False,
+		unique = False,
+		nullable = False,
+		default = False
+	)
 
 	token_devices = db.relationship('TokenDevice', lazy='select',
         backref=db.backref('user', lazy='select'))
 
 	def set_password(self, password):
 		"""Create hashed password."""
-		self.password = generate_password_hash(password, method='sha256')
+		self.password = generate_password_hash(password, method='pbkdf2:sha256:100000', salt_length= 16)
 
 	def check_password(self, password):
 		"""Check hashed password."""
@@ -140,6 +147,7 @@ class TokenDevice(db.Model):
 		nullable=False
 	)
 
+
 	def __str__(self):
 		return self.name
 
@@ -175,52 +183,96 @@ class OAuth2Token(db.Model, OAuth2TokenMixin):
 	user = db.relationship('User')
 
 
-class Registration:
+class RegistrationRequest(db.Model):
 	# invalid after 30 minutes
-	EXPIRE = 1800
+	EXPIRE = 30
+	
+	id = db.Column(db.Integer, primary_key=True)
 
-	def __init__(self, code, user_id):
-		self.user_id = user_id
-		self.code = code
-		self.start_at = datetime.now()
-		self.success = False
+	user_id = db.Column(
+		db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
 
-	def get_user_id(self):
-		return self.user_id
+	private_code = db.Column(
+		db.String(48),
+		unique=True,
+		nullable=False,
+		index = True
+	)
+	
+	start_at = db.Column(
+		db.DateTime,
+		index=False,
+		unique=False,
+		nullable=True
+	)
+
+	is_success = db.Column(
+		db.Boolean,
+		unique = False,
+		nullable = False,
+		default = True
+	)
+
+	metadata_device_model = db.Column(
+		db.String(100),
+		unique=False,
+		nullable= True,
+		index = False
+	)
+	
+	metadata_device_os = db.Column(
+		db.String(100),
+		unique=False,
+		nullable= True,
+		index = False
+	)
+
+	user = db.relationship('User')
 
 	def update_metadata(self, metadata):
-		self.device_model = metadata['device_model']
-		self.device_os = metadata['device_os']
+		self.metadata_device_model = metadata['device_model']
+		self.metadata_device_os = metadata['device_os']
 
-	def is_expired(self):
+	def check_expired(self):
 		now= datetime.now()
 		delta = now - self.start_at
 		return delta.seconds > self.EXPIRE
 
-	def is_success(self):
-		return self.success
 
+class AccessRequest(db.Model):
+	# invalid after 5 minutes
+	EXPIRE = 30
 
+	id = db.Column(db.Integer, primary_key=True)
 
-class MFARequest:
-	# invalid after 30 minutes
-	EXPIRE = 1800
+	user_id = db.Column(
+		db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
 
-	def __init__(self, mfa_code, user_id, next_page):
-		self.user_id = user_id
-		self.mfa_code = mfa_code
-		self.start_at = datetime.now()
-		self.success = False
-		self.next_page = next_page
+	mfa_code = db.Column(
+		db.String(48),
+		unique=True,
+		nullable=False,
+		index = True
+	)
+	
+	start_at = db.Column(
+		db.DateTime,
+		index=False,
+		unique=False,
+		nullable=True
+	)
 
-	def get_user_id(self):
-		return self.user_id
+	is_success = db.Column(
+		db.Boolean,
+		unique = False,
+		nullable = False,
+		default = True
+	)
 
-	def is_expired(self):
+	user = db.relationship('User')
+
+	def check_expired(self):
 		now= datetime.now()
 		delta = now - self.start_at
 		return delta.seconds > self.EXPIRE
-
-	def is_success(self):
-		return self.success
 	

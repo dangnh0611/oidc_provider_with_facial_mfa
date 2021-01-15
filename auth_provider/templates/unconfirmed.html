@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block pagestyles %}
+  <link href="{{ url_for('static', filename='css/account.css') }}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block content %}
+  <div class="form-wrapper">
+
+    <div class="logo">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="logo" style='width:100px; height: 100px;'/>
+    </div>
+
+    {% for message in get_flashed_messages() %}
+      <div class="alert alert-warning">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+      </div>
+    {% endfor %}
+    <h1>Confirm your account</h1>
+
+    <form method="POST" action="{{ url_for('auth_bp.confirm_email_warning') }}">
+      {{ form.csrf_token }}
+      <fieldset class="email">
+        <p style='font-size: 20px; font-style: italic; color: #5f6988'>We have sent an email to <p style='font-size: 20px; font-style: italic; color: #5eb9d7'>{{email}}.</p></p>
+        <p style='font-size: 20px; font-style: italic; color: #5f6988'>Check your email and click the confirmation link to activate your new account.</p>
+        <div class="submit-button">
+          {{ form.submit }}
+        </div>
+        <div class="login-signup">
+          <span>Register a new account? <a href="{{ url_for('auth_bp.signup') }}">Sign up.</a></span>
+        </div>
+      </fieldset>
+
+
+    </form>
+  </div>
+{% endblock %}

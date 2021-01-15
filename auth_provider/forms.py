@@ -1,7 +1,30 @@
 """Sign-up & log-in forms."""
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, RecaptchaField
 from wtforms import StringField, PasswordField, SubmitField, SelectMultipleField, SelectField, BooleanField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
+
+def safe_password_check(min_len = 8):
+
+    def _safe_password_check(form, field):
+        password = field.data
+        if len(password) < min_len:
+            raise ValidationError(f"Password must contain at least {min_len} characters.")
+        alpha = False
+        digit = False
+        other = False
+        for c in password:
+            if c.isalpha():
+                alpha = True
+            elif c.isdigit():
+                digit = True
+            else:
+                other = True
+        if alpha and digit and other:
+            pass
+        else:
+            raise ValidationError(f"Password must contain both 3 types: alphabet letters (a-z, A-Z), digits (0-9) and special characters. For example: done_login@123")
+    
+    return _safe_password_check
 
 
 class SignupForm(FlaskForm):
@@ -22,18 +45,21 @@ class SignupForm(FlaskForm):
         'Password',
         validators=[
             DataRequired(),
-            Length(min=6, message='Select a stronger password.')
+            safe_password_check(min_len=8)
         ]
     )
     confirm = PasswordField(
         'Confirm Your Password',
         validators=[
             DataRequired(),
-            EqualTo('password', message='Passwords must match.')
+            EqualTo('password', message='Passwords must match.'),
         ]
     )
 
-    submit = SubmitField('Register')
+    recaptcha = RecaptchaField()
+
+    # use variable name except "submit" to intergrate hidden reCAPTCHA
+    signup_submit = SubmitField('Register')
 
 
 class LoginForm(FlaskForm):
@@ -46,7 +72,15 @@ class LoginForm(FlaskForm):
         ]
     )
     password = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('Log In')
+    recaptcha = RecaptchaField()
+    
+    # use variable name except "submit" to intergrate hidden reCAPTCHA
+    login_submit = SubmitField('Log In')    
+
+
+class ReSentEmailConfirmationForm(FlaskForm):
+    """User Log-in Form."""
+    submit = SubmitField(label = 'Re-sent confirmation email', description='Re-sent email confirmation link')
 
 
 class AuthorizationForm(FlaskForm):
@@ -93,7 +127,7 @@ class CreateClientForm(FlaskForm):
         validators=[DataRequired()], 
         choices=[('none', 'none'), ('client_secret_post', 'client_secret_post'), ('client_secret_basic', 'client_secret_basic')]
     )
-    submit = SubmitField('Submit')
+    _submit = SubmitField('Submit')
 
 
 
