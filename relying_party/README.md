@@ -1,4 +1,4 @@
-# Google login demo with Flask
+# OIDC login demo with Flask
 
 You can learn Flask OAuth 2.0 client with this demo.
 

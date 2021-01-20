@@ -1,13 +1,13 @@
 """Routes for user authentication."""
 from flask import redirect, render_template, flash, Blueprint, request, url_for, session, jsonify
 from flask_login import current_user, login_user
-from ..forms import LoginForm, SignupForm, ReSentEmailConfirmationForm
+from ..forms import LoginForm, SignupForm, ReSentEmailConfirmationForm, PasswordResetFirstStepForm, PasswordResetSecondStepForm
 from ..models import db, User, AccessRequest, TokenDevice
 from ..import login_manager
 from werkzeug.security import gen_salt
-from ..helper import push_fcm_notification, verify_signature, generate_email_confirmation_token, confirm_email_token, send_email
-from datetime import datetime
+from ..helper import push_fcm_notification, verify_signature, generate_security_email_token, confirm_security_email_token, send_email
 from flask_login import login_required
+from datetime import datetime
 
 
 # Blueprint Configuration
@@ -38,7 +38,7 @@ def signup():
             user.set_password(form.password.data)
 
             # sent email
-            token = generate_email_confirmation_token(user.email)
+            token = generate_security_email_token(user.email, salt = 'confirm_account')
             confirm_url = url_for('auth_bp.confirm_email', token=token, _external=True)
             html = render_template('email_confirmation.html', confirm_url=confirm_url)
             subject = "[DOneLogin] Please confirm your email"
@@ -63,7 +63,7 @@ def signup():
 @auth_bp.route('/confirm/<token>', methods = ['GET'])
 def confirm_email(token):
     try:
-        email = confirm_email_token(token)
+        email = confirm_security_email_token(token)
     except:
         flash('The confirmation link is invalid or has expired.', 'danger')
     user = User.query.filter_by(email=email).first_or_404()
@@ -91,9 +91,9 @@ def confirm_email_warning():
     if form.validate_on_submit():
         try:
             # re-sent email confirmation link
-            token = generate_email_confirmation_token(user.email)
+            token = generate_security_email_token(user.email, salt = 'confirm_account')
             confirm_url = url_for('auth_bp.confirm_email', token=token, _external=True)
-            html = render_template('email_confirmation.html', confirm_url=confirm_url)
+            html = render_template('confirmation_email.html', confirm_url=confirm_url)
             subject = "Please confirm your email"
             send_email(user.email, subject, html)
             flash("Email re-sent successfully!")
@@ -109,6 +109,78 @@ def confirm_email_warning():
         template='signup-page',
         body="Confirm your email address.",
         email = user.email
+    )
+
+
+@auth_bp.route('/reset/<token>', methods = ['GET', 'POST'])
+def password_reset(token):
+    try:
+        email = confirm_security_email_token(token, salt = 'reset_password')
+    except:
+        flash('The confirmation link is invalid or has expired.', 'danger')
+        return redirect(url_for('auth_bp.password_reset_promt'))
+    user = User.query.filter_by(email=email).first_or_404()
+    form = PasswordResetSecondStepForm()
+    # POST
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        # if user choose to reset MFA credentials too
+        if form.reset_mfa:
+            user.mfa = False
+            TokenDevice.query.filter_by(user_id = user.id).delete()
+        db.session.add(user)
+        db.session.commit()
+        flash('Password reset successfully! You can now login with your new password.')
+        return redirect(url_for('auth_bp.login'))
+    # GET
+    else:
+        return render_template(
+            'password_reset_promt2.html',
+            form=form,
+            title='Reset password.',
+            template='login-page',
+            body="Reset your account password."
+        )
+
+
+@auth_bp.route('/password_reset_promt/', methods = ['GET', 'POST'])
+def password_reset_promt():
+    if current_user.is_authenticated:
+        return redirect(url_for('main_bp.dashboard'))
+    form = PasswordResetFirstStepForm()
+    # if method is POST
+    if form.validate_on_submit():
+        # try:
+        email = form.email.data
+        user = User.query.filter_by(email = email).first()
+        if user is None:
+            flash("No account associated with this email!")
+        else:
+            # re-sent email confirmation link
+            token = generate_security_email_token(email = email, salt = 'reset_password')
+            password_reset_url = url_for('auth_bp.password_reset', token=token, _external=True)
+            html = render_template('password_reset_email.html', confirm_url=password_reset_url)
+            subject = "Reset your account password"
+            send_email(user.email, subject, html)
+            return render_template(
+                'password_reset_warning.html',
+                title='Reset password.',
+                template='signup-page',
+                body="Reset your account password.",
+                email = user.email
+            )
+            
+        # except:
+        #     flash("An unexpected error occur! Please try again.")
+        return redirect(url_for('auth_bp.password_reset_promt'))
+    # if method is GET
+    else:
+        return render_template(
+        'password_reset_promt1.html',
+        title='Reset your password.',
+        form=form,
+        template='signup-page',
+        body="Confirm your email address.",
     )
 
 
@@ -131,7 +203,6 @@ def login():
     if request.method == 'POST':
         # Validate login attempt
         if form.validate_on_submit():
-            print('XYZ')
             user = User.query.filter_by(email=form.email.data).first()  
             if user and user.check_password(password=form.password.data):
                 if not user.is_confirmed:

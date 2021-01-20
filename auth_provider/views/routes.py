@@ -72,7 +72,7 @@ def create_client():
                 "client_name": form.client_name.data,
                 "client_uri": form.client_uri.data,
                 "grant_types": form.allowed_grant_type.data,
-                "redirect_uris": [form.redirect_uri.data],
+                "redirect_uris": form.redirect_uri.data.split(),
                 "response_types": form.allowed_response_type.data,
                 "scope": ' '.join(form.allowed_scope.data),
                 "token_endpoint_auth_method": form.token_endpoint_auth_method.data

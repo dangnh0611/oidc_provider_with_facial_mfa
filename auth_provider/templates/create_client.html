@@ -52,7 +52,7 @@
 
       <fieldset>
         {{ form.redirect_uri.label }}
-        {{ form.redirect_uri}}
+        {{ form.redirect_uri(cols= 50, rows = 3)}}
         {% if form.redirect_uri.errors %}
         <ul class="errors">
           {% for error in form.redirect_uri.errors %}

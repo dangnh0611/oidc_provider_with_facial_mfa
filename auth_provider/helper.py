@@ -47,21 +47,18 @@ def push_fcm_notification(token, title, body, data={}):
     print('Successfully sent message:', response)
 
 
-def generate_email_confirmation_token(email, salt="confirm_account"):
+def generate_security_email_token(email, salt="confirm_account"):
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     return serializer.dumps(email, salt=salt)
 
 
-def confirm_email_token(token, expiration=3600, salt = "confirm_account"):
+def confirm_security_email_token(token, expiration=3600, salt = "confirm_account"):
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-    try:
-        email = serializer.loads(
+    email = serializer.loads(
             token,
             salt= salt,
             max_age=expiration
         )
-    except:
-        return False
     return email
 
 def send_email(to, subject, template):

@@ -1,6 +1,6 @@
 """Sign-up & log-in forms."""
 from flask_wtf import FlaskForm, RecaptchaField
-from wtforms import StringField, PasswordField, SubmitField, SelectMultipleField, SelectField, BooleanField
+from wtforms import StringField, PasswordField, SubmitField, SelectMultipleField, SelectField, BooleanField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
 
 def safe_password_check(min_len = 8):
@@ -83,6 +83,46 @@ class ReSentEmailConfirmationForm(FlaskForm):
     submit = SubmitField(label = 'Re-sent confirmation email', description='Re-sent email confirmation link')
 
 
+class PasswordResetFirstStepForm(FlaskForm):
+    """User Log-in Form."""
+    recaptcha = RecaptchaField()
+
+    email = StringField(
+        'Email',
+        validators=[
+            DataRequired(),
+            Email(message='Enter a valid email.')
+        ]
+    )
+
+    password_reset_submit = SubmitField(label = 'Reset password', description='Sent me an email for password reset')
+
+
+class PasswordResetSecondStepForm(FlaskForm):
+    """User Log-in Form."""
+    password = PasswordField(
+        'New password',
+        validators=[
+            DataRequired(),
+            safe_password_check(min_len=8)
+        ]
+    )
+    confirm = PasswordField(
+        'Confirm your new password',
+        validators=[
+            DataRequired(),
+            EqualTo('password', message='Passwords must match.'),
+        ]
+    )
+    reset_mfa = BooleanField(
+        'Also reset my MFA setting',
+        validators=[],
+        default= False
+    )
+    recaptcha = RecaptchaField()
+    password_reset_submit = SubmitField(label = 'Reset password', description='Reset password')
+
+
 class AuthorizationForm(FlaskForm):
     """Authorization confirmation"""
     confirm= BooleanField(
@@ -106,8 +146,8 @@ class CreateClientForm(FlaskForm):
         'Allowed Scope', 
         validators=[DataRequired()], choices=[('openid', 'Open ID Connect (openid)'), ('profile', 'Profile (profile)'), ('email', 'Email (email)'), ('phone', 'Phone number (phone)'), ('address', 'Address (address)')]
         )
-    redirect_uri=StringField(
-        'Redirect URI', 
+    redirect_uri= TextAreaField(
+        'Redirect URIs', 
         validators=[DataRequired()]
         )
     allowed_grant_type=SelectMultipleField(

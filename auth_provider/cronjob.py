@@ -21,7 +21,7 @@ def cronjob():
     AccessRequest.query.filter(is_expired(AccessRequest.start_at, now, AccessRequest.EXPIRE)).delete()
     RegistrationRequest.query.filter(is_expired(RegistrationRequest.start_at, now, RegistrationRequest.EXPIRE)).delete()
     db.session.commit()
-    print(RegistrationRequest.query.count(), AccessRequest.query.count())
+    # print(RegistrationRequest.query.count(), AccessRequest.query.count())
 
 print('STARTING CRONJOB!')
 print(current_app)
