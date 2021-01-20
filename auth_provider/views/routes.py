@@ -100,7 +100,10 @@ def clients():
     else:
         clients = []
 
-    return render_template('clients.html', user = user, clients=clients)
+    clients_list = []
+    for client in clients:
+        clients_list.append([client, {'client_info': client.client_info, 'client_metadata': client.client_metadata}])
+    return render_template('clients.html', user = user, clients_list = clients_list)
 
 @main_bp.route('/devices', methods=['GET'])
 @login_required

@@ -4,7 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_session import Session
 from flask_mail import Mail
-
+import json
+from datetime import datetime
 
 
 db = SQLAlchemy()
@@ -42,4 +43,13 @@ def create_app():
         # Create Database Models
         db.create_all()
 
+        def to_pretty_json(value):
+            return json.dumps(value, sort_keys=True,
+                      indent=4, separators=(',', ': '))
+        
+        def timestamp_to_str(value):
+            return datetime.fromtimestamp(value).strftime("%m/%d/%Y, %H:%M:%S")
+
+        app.jinja_env.filters['tojson_pretty'] = to_pretty_json
+        app.jinja_env.filters['timestamp_to_str'] = timestamp_to_str 
         return app
