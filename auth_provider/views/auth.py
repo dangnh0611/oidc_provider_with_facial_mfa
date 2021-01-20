@@ -353,6 +353,7 @@ def load_user(user_id):
     """Check if user is logged-in upon page load."""
     if user_id is not None:
         user= User.query.get(user_id)
+    if user is not None:
         if user.is_confirmed:
             return user
         else:

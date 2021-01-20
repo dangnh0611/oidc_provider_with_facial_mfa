@@ -42,8 +42,6 @@ def logout():
     logout_user()
     return redirect(url_for('auth_bp.login'))
 
-def split_by_crlf(s):
-    return [v for v in s.splitlines() if v]
 
 @main_bp.route('/create_client', methods=['GET', 'POST'])
 @login_required
@@ -110,6 +108,27 @@ def devices():
     user = current_user
     token_devices = user.token_devices
     return render_template('devices.html', user=user, token_devices = token_devices)
+
+
+@main_bp.route('/devices/<device_id>', methods = ['GET', 'DELETE'])
+@login_required
+def device(device_id):
+    user = current_user
+    token_device = None
+    for device in user.token_devices:
+        if device.id == int(device_id):
+            token_device = device
+    if token_device is None:
+        flash('Invalid request!')
+        return jsonify({'status': 'fail', 'msg': 'Invalid request!'})
+    elif len(user.token_devices)<=1 and user.mfa:
+        flash('You must turn of MFA first since this device is the last associated one with your account.')
+        return jsonify({'status': 'fail', 'msg': 'Turn off MFA first!'})
+    else:
+        db.session.delete(token_device)
+        db.session.commit()
+        flash(f'Removed {token_device.device_model}!')
+        return jsonify({'status': 'success'})
 
 
 @main_bp.route('/qrcode', methods=['GET'])

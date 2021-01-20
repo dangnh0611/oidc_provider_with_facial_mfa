@@ -61,6 +61,7 @@ def confirm_security_email_token(token, expiration=3600, salt = "confirm_account
         )
     return email
 
+
 def send_email(to, subject, template):
     msg = Message(
         subject,
@@ -70,3 +71,6 @@ def send_email(to, subject, template):
     )
     mail.send(msg)
 
+
+def split_by_crlf(s):
+    return [v for v in s.splitlines() if v]

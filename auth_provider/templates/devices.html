@@ -51,54 +51,92 @@
 
 <div class='dashboardcontent'>
   <div id='dashboard_content' class="form-wrapper">
+    
     <a id="add_new_device_btn" class="btn btn-primary btn-icon-split btn-lg">
       <span class="icon text-white-50">
-          <i class="fas fa-mobile-alt"></i>
+        <i class="fas fa-mobile-alt"></i>
       </span>
       <span class="text">Add new device</span>
-  </a>
+    </a>
     <h1 style='margin-top: 50px;'>Your devices </h1>
+
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      {{ message }}
+    </div>
+    {% endfor %}
+
     {% for device in token_devices %}
-      <div class="card shadow" style="width: 40%; margin-bottom: 10px;">
-        <!-- Card Header - Dropdown -->
-        <div
-            class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">{{ device.device_model}}</h6>
-            <div class="dropdown no-arrow">
-                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                </a>
-                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                    aria-labelledby="dropdownMenuLink">
-                    <div class="dropdown-header">Actions</div>
-                    <a class="dropdown-item" href="#">Detail</a>
-                    <a class="dropdown-item" href="#">Disable</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">Delete</a>
-                </div>
-            </div>
+    <div class="card shadow" style="width: 40%; margin-bottom: 10px;">
+      <!-- Card Header - Dropdown -->
+      <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">{{ device.device_model}}</h6>
+        <div class="dropdown no-arrow">
+          <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+          </a>
+          <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+            <div class="dropdown-header">Actions</div>
+            <button class="dropdown-item" href="#" data-toggle="modal" data-target="#detailDeviceModal">
+              <i class="fas fa-info fa-sm fa-fw mr-2 text-gray-400"></i>
+              Detail
+            </button>
+            <button class="dropdown-item" href="#" data-toggle="modal" data-target="#disableDeviceModal">
+              <i class="fas fa-toggle-off fa-sm fa-fw mr-2 text-gray-400"></i>
+              Disable
+            </button>
+            <button type='button' class="dropdown-item" data-id="{{device.id}}" data-model="{{device.device_model}}"
+               data-toggle="modal" data-target="#deleteDeviceModal">
+              <i class="fas fa-trash fa-sm fa-fw mr-2 text-gray-400"></i>
+              Delete
+            </button>
+          </div>
         </div>
-        <!-- Card Body -->
-        <div class="card-body" style="padding: 5px;">
-            <ul>
-              <li><b>Operating system:&nbsp</b>  {{ device.device_os }} </li>
-              <li><b>Register at:&nbsp</b> {{ device.created_at.strftime("%m/%d/%Y, %H:%M:%S")}} </li>
-              <li><b>Last used:&nbsp</b> {{ device.last_login.strftime("%m/%d/%Y, %H:%M:%S")}} </li>
-            </ul>
-        </div>
+      </div>
+      <!-- Card Body -->
+      <div class="card-body" style="padding: 5px;">
+        <ul>
+          <li><b>Operating system:&nbsp</b> {{ device.device_os }} </li>
+          <li><b>Register at:&nbsp</b> {{ device.created_at.strftime("%m/%d/%Y, %H:%M:%S")}} </li>
+          <li><b>Last used:&nbsp</b> {{ device.last_login.strftime("%m/%d/%Y, %H:%M:%S")}} </li>
+        </ul>
+      </div>
     </div>
 
 
     {% endfor %}
 
-                              
+
 
   </div>
 </div>
 
 
-
+<!-- Delete Device Modal-->
+<div class="modal fade" id="deleteDeviceModal" tabindex="-1" role="dialog"
+  aria-labelledby="exampleModalCenterTitle exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Delete this device?</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style='color: red'>Warning: Doing this can prevent you from signin if MFA is still turned on.</p>
+        Are you sure to delete this device? After that you can not use this device for MFA anymore.
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" data-temp = 'temp' onclick='deleteAjaxRequest(this)' style='background-color: #f44336'>
+          Delete this device</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 {% endblock %}
@@ -106,8 +144,32 @@
 {% block additionalscripts %}
 <script src="{{ url_for('static', filename='js/main.min.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
+
+<script>
+  // DELETE request when click delete button on modal
+  function deleteAjaxRequest(element) {
+    console.log(element)
+    $.ajax({
+      url: 'devices/' + element.dataset.id,
+      type: 'DELETE',
+      success: function (result) {
+        // Do something with the result
+        window.location.reload();
+      }
+    });
+  }
+
+  // bootstrap modal for each device
+  $('#deleteDeviceModal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget); // Button that triggered the modal
+    var id = button.data('id');
+    var model = button.data('model');
+    var modal = $(this);
+    modal.find('.modal-title').text("Delete device " + model);
+    modal.find('.modal-footer .btn-primary').attr('data-id', id);
+  });
+</script>
 
 {% raw -%}
 <script id='show-device-template' type='text/template'>
@@ -192,7 +254,7 @@
       ajax.open("GET", `/device_registration_status`, true);
       ajax.send();
     }
-    $("#qrcode").load(function() {
+    $("#qrcode").on('load', function() {
       // Update tasks progress periodly
       updateProgress();
       var id = setInterval(updateProgress, 2000);
