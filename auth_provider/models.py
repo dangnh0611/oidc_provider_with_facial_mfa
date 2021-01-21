@@ -277,6 +277,20 @@ class AccessRequest(db.Model):
 		default = True
 	)
 
+	ip = db.Column(
+		db.String(50),
+		unique=False,
+		nullable=True,
+		index = False
+	)
+
+	location = db.Column(
+		db.String(50),
+		unique=False,
+		nullable=True,
+		index = False
+	)
+
 	user = db.relationship('User')
 
 	def check_expired(self):

@@ -257,7 +257,7 @@
     $("#qrcode").on('load', function() {
       // Update tasks progress periodly
       updateProgress();
-      var id = setInterval(updateProgress, 2000);
+      var id = setInterval(updateProgress, 1000);
       document.querySelector('#qrcode').dataset.interval_id = id;
     })
 

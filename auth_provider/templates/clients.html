@@ -12,12 +12,29 @@
 
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Your Clients:</h1>
+        <h1 class="h3 mb-0 text-gray-800">Clients Manager</h1>
     </div>
 </div>
 
 <div class='dashboardcontent'>
-    <div id='dashboard_content' class="form-wrapper" >
+    <div id='dashboard_content' class="form-wrapper">
+        <a id="add_new_client_btn" class="btn btn-primary btn-icon-split btn-lg"
+            href="{{ url_for('main_bp.create_client')}}">
+            <span class="icon text-white-50">
+                <i class="fas fa-bezier-curve"></i>
+            </span>
+            <span class="text">Register new client</span>
+        </a>
+
+        <h1 style='margin-top: 50px;'>Your Clients</h1>
+
+        {% for message in get_flashed_messages() %}
+        <div class="alert alert-warning">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            {{ message }}
+        </div>
+        {% endfor %}
+
         {% for (client, client_dict) in clients_list %}
         <div class="card shadow" style="width: 70%; margin-bottom: 10px;">
             <!-- Card Header - Dropdown -->
@@ -54,8 +71,11 @@
                 <ul>
                     <li><b>Client name:&nbsp</b> {{ client_dict.client_metadata.client_name}} </li>
                     <li><b>Client ID:&nbsp</b> {{ client_dict.client_info.client_id}} </li>
-                    <li><b>Client URI:&nbsp</b> <a target="blank" href = "{{ client_dict.client_metadata.client_uri}}">{{ client_dict.client_metadata.client_uri}}</a> </li>
-                    <li><b>Issued at:&nbsp</b> {{ client_dict.client_info.client_id_issued_at | timestamp_to_str }} </li>
+                    <li><b>Client URI:&nbsp</b> <a target="blank"
+                            href="{{ client_dict.client_metadata.client_uri}}">{{ client_dict.client_metadata.client_uri}}</a>
+                    </li>
+                    <li><b>Issued at:&nbsp</b> {{ client_dict.client_info.client_id_issued_at | timestamp_to_str }}
+                    </li>
                 </ul>
                 <a href="#clientDetail-{{client.id}}" class="py-3" data-toggle="collapse" role="button"
                     aria-expanded="false" aria-controls="collapseCardExample"><u>Details</u>

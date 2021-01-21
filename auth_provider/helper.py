@@ -32,19 +32,22 @@ def verify_signature(base64_public_key, base64_signature, message):
 
 
 def push_fcm_notification(token, title, body, data={}):
-    notification = messaging.Notification(title = title, body = body)
+    try:
+        notification = messaging.Notification(title = title, body = body)
 
-    message = messaging.Message(
-        notification = notification,
-        data=data,
-        token=token
-    )
+        message = messaging.Message(
+            notification = notification,
+            data=data,
+            token=token
+        )
 
-    # Send a message to the device corresponding to the provided
-    # registration token.
-    response = messaging.send(message)
-    # Response is a message ID string.
-    print('Successfully sent message:', response)
+        # Send a message to the device corresponding to the provided
+        # registration token.
+        response = messaging.send(message)
+        # Response is a message ID string.
+        print('Successfully sent message:', response)
+    except:
+        print('Error occur while sending push notification')
 
 
 def generate_security_email_token(email, salt="confirm_account"):

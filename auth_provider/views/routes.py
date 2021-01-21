@@ -12,6 +12,7 @@ import pyqrcode
 import io
 from werkzeug.security import gen_salt
 from datetime import datetime
+import base64
 
 # Blueprint Configuration
 main_bp = Blueprint(
@@ -153,7 +154,8 @@ def qrcode():
     print('NEW REGIST: ', code)
 
     # render QR code
-    qr_content = json.dumps(msg)
+    content_json = json.dumps(msg)
+    qr_content = base64.b64encode(content_json.encode('utf-8'))
     url = pyqrcode.create(qr_content)
     stream = io.BytesIO()
     url.svg(stream, scale=5)

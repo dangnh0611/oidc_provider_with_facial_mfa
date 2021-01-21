@@ -40,7 +40,7 @@ def signup():
             # sent email
             token = generate_security_email_token(user.email, salt = 'confirm_account')
             confirm_url = url_for('auth_bp.confirm_email', token=token, _external=True)
-            html = render_template('email_confirmation.html', confirm_url=confirm_url)
+            html = render_template('confirmation_email.html', confirm_url=confirm_url)
             subject = "[DOneLogin] Please confirm your email"
             send_email(user.email, subject, html)
 
@@ -102,14 +102,17 @@ def confirm_email_warning():
         return redirect(url_for('auth_bp.confirm_email_warning'))
     # if method is GET
     else:
-        return render_template(
-        'unconfirmed.html',
-        title='Confirm your email address.',
-        form=form,
-        template='signup-page',
-        body="Confirm your email address.",
-        email = user.email
-    )
+        if user.is_authenticated:
+            return redirect(url_for('main_bp.dashboard'))
+        else:
+            return render_template(
+            'unconfirmed.html',
+            title='Confirm your email address.',
+            form=form,
+            template='signup-page',
+            body="Confirm your email address.",
+            email = user.email
+        )
 
 
 @auth_bp.route('/reset/<token>', methods = ['GET', 'POST'])
@@ -229,10 +232,12 @@ def login():
                         token = device.fcm_token
                         body = f'Facial authentication request from {user.name}({user.email})'
                         data = { "mfa_code": mfa_code, "type": "faceid", "device_id": str(device.id),
-                        "username": user.name, "email": user.email, "request_at": datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}
+                        "request_at": datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
+                        "ip": request.remote_addr, "location": "UNKNOWN"}
                         push_fcm_notification(token= token, title= title, body = body, data= data)
                     print('CREATE MFAREQUEST', next_page)
-                    new_access_request = AccessRequest(user_id = user.id, mfa_code = mfa_code, start_at = datetime.now(), is_success= False)
+                    new_access_request = AccessRequest(user_id = user.id, mfa_code = mfa_code, start_at = datetime.now(),
+                     is_success= False, ip = request.remote_addr, location = "UNKNOWN")
                     db.session.add(new_access_request)
                     db.session.commit()
                     # update session
@@ -299,7 +304,13 @@ def mfa_face():
         else:
             db.session.delete(access_request)
             db.session.commit()
-            return jsonify({'status': 'fail', 'msg': "Facial recognition failed !"})
+            if 'msg' in data:
+                msg = data['msg']
+            else:
+                msg = "Unexpected Error !"
+            return jsonify({'status': 'fail', 'msg': msg})
+    else:
+        return jsonify({'status': 'fail', 'msg': 'Invalid signature, attack detected !'})
     
     
 @auth_bp.route('/login_2fa_status', methods=['GET'])
@@ -309,7 +320,7 @@ def login_2fa_status():
     mfa_code = session['mfa_code']
     access_request = AccessRequest.query.filter_by(mfa_code = mfa_code).first()
     if access_request is None:
-        return jsonify({"status": "fail", "msg": "Access request failed !"})
+        return jsonify({"status": "fail", "msg": "Access request denied !"})
     if access_request.check_expired():
         db.session.delete(access_request)
         db.session.commit()
@@ -343,7 +354,8 @@ def get_mfa_requests():
         access_requests = AccessRequest.query.filter_by(user_id = user_id).all()
         for access_request in access_requests:
             ret.append({ "mfa_code": access_request.mfa_code, "device_id": device_id,
-                         "request_at": access_request.start_at.strftime("%m/%d/%Y, %H:%M:%S") })
+                         "request_at": access_request.start_at.strftime("%m/%d/%Y, %H:%M:%S"),
+                         "ip": access_request.ip, "location": access_request.location })
 
     return jsonify({"status": "success", "requests": ret })
 
