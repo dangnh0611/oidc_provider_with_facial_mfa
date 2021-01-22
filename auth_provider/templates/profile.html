@@ -12,145 +12,55 @@
 
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Clients Manager</h1>
+        <h1 class="h3 mb-0 text-gray-800">Personal Profile</h1>
     </div>
-</div>
+    <div>
+        <center style = "margin-top: 20px;">
+            <div style = "width: 70%">
+                <div class="card border-left-primary shadow h-100 py-2" style = "width: 100%;">
+                    <center>
+                        <img class="img-profile rounded-circle" width="140" height="140"
+                                src="{{ url_for('static', filename='img/undraw_profile.svg') }}">
+                        <h3 class="media-heading" style = "margin-top: 10px;">{{user.name}}</h3>
+                        <span><strong style = "font-size: larger;">{{user.email}}</strong></span>
+                    </center>
 
-<div class='dashboardcontent'>
-    <div id='dashboard_content' class="form-wrapper">
-        <a id="add_new_client_btn" class="btn btn-primary btn-icon-split btn-lg"
-            href="{{ url_for('main_bp.create_client')}}">
-            <span class="icon text-white-50">
-                <i class="fas fa-bezier-curve"></i>
-            </span>
-            <span class="text">Register new client</span>
-        </a>
 
-        <h1 style='margin-top: 50px;'>Your Clients</h1>
-
-        {% for message in get_flashed_messages() %}
-        <div class="alert alert-warning">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            {{ message }}
-        </div>
-        {% endfor %}
-
-        {% for (client, client_dict) in clients_list %}
-        <div class="card shadow" style="width: 70%; margin-bottom: 10px;">
-            <!-- Card Header - Dropdown -->
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">{{client.client_metadata.client_name}}
-                    ({{client.client_metadata.client_uri}})</h6>
-                <div class="dropdown no-arrow">
-                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                        aria-labelledby="dropdownMenuLink">
-                        <div class="dropdown-header">Actions</div>
-                        <button class="dropdown-item" href="#" data-toggle="modal" data-target="#detailModal">
-                            <i class="fas fa-info fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Detail
-                        </button>
-                        <button class="dropdown-item" href="#" data-toggle="modal" data-target="#disableModal">
-                            <i class="fas fa-toggle-off fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Disable
-                        </button>
-                        <button type='button' class="dropdown-item" data-id="{{client.id}}"
-                            data-name="{{client.client_metadata.client_name}}" data-toggle="modal"
-                            data-target="#deleteModal">
-                            <i class="fas fa-trash fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <!-- Card Body -->
-            <div class="card-body" style="padding: 5px;">
-                <ul>
-                    <li><b>Client name:&nbsp</b> {{ client_dict.client_metadata.client_name}} </li>
-                    <li><b>Client ID:&nbsp</b> {{ client_dict.client_info.client_id}} </li>
-                    <li><b>Client URI:&nbsp</b> <a target="blank"
-                            href="{{ client_dict.client_metadata.client_uri}}">{{ client_dict.client_metadata.client_uri}}</a>
-                    </li>
-                    <li><b>Issued at:&nbsp</b> {{ client_dict.client_info.client_id_issued_at | timestamp_to_str }}
-                    </li>
-                </ul>
-                <a href="#clientDetail-{{client.id}}" class="py-3" data-toggle="collapse" role="button"
-                    aria-expanded="false" aria-controls="collapseCardExample"><u>Details</u>
-                </a>
-                <!-- Card Content - Collapse -->
-                <div class="collapse" id="clientDetail-{{client.id}}">
                     <div class="card-body">
-                        <pre>{{ client_dict | tojson_pretty | safe }}
-                    </pre>
+                        <div class="row no-gutters align-items-center">
+                                     <div class="col mr-2">
+                                <hr style = "width: 50%;">
+
+                                <div class="h5 mb-0 text-gray-800" style = "text-align: left; padding-left: 35%; margin-top: 30px;">
+                                    <ul style = "font-size: large;">
+                                        <li><b>Name:&nbsp</b> {{ user.name }} </li>
+                                        <li><b>Email:&nbsp</b> {{ user.email}} </li>
+                                        <li><b>MFA turned on:&nbsp</b> {{ user.mfa }} </li>
+                                        <li><b>Registed at:&nbsp</b> {{ user.created_at.strftime("%m/%d/%Y, %H:%M:%S")}} </li>
+                                        <li><b>Last login:&nbsp</b> {{ user.last_login.strftime("%m/%d/%Y, %H:%M:%S")}} </li>
+                                        <li><b>Client Apps:&nbsp</b> {{ n_clients }} registered clients </li>
+                                        <li><b>Token Devices:&nbsp</b> {{ user.token_devices | length }} linked devices </li>
+                                      </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        {% endfor %}
-    </div>
 
+
+        </center>
+    
+    </div>
 </div>
 
-<!-- Delete Device Modal-->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog"
-  aria-labelledby="exampleModalCenterTitle exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Delete this app?</h5>
-        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">×</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p style='color: red'>Warning: Client app will not be able to access SSO service anymore.</p>
-        Are you sure to remove this client application?.
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" data-temp = 'temp' onclick='deleteAjaxRequest(this)' style='background-color: #f44336'>
-          Remove this Client App</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 {% endblock %}
 
 {% block additionalscripts %}
-<script src="{{ url_for('static', filename='js/main.min.js') }}"></script>
-<script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
 <script>
-    $(".chosen-select").chosen({
-        no_results_text: "Oops, nothing found!"
-    })
-
-    // DELETE request when click delete button on modal
-  function deleteAjaxRequest(element) {
-    console.log(element);
-    $.ajax({
-      url: 'clients/' + element.dataset.id,
-      type: 'DELETE',
-      success: function (result) {
-        // Do something with the result
-        window.location.reload();
-      }
-    });
-  }
-
-  // bootstrap modal for each device
-  $('#deleteModal').on('show.bs.modal', function (event) {
-    var button = $(event.relatedTarget); // Button that triggered the modal
-    var id = button.data('id');
-    var name = button.data('name');
-    var modal = $(this);
-    modal.find('.modal-title').text(`Delete "${name}"`);
-    modal.find('.modal-footer .btn-primary').attr('data-id', id);
-  });
-
-</script>
+    document.getElementById("profile-nav-item").classList.add('active');
+  </script>
 
 {% endblock %}

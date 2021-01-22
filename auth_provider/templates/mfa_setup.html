@@ -129,5 +129,11 @@
     no_results_text: "Oops, nothing found!"
   })
 </script>
+<script>
+  document.getElementById("setting-nav-item").classList.add('active');
+  document.getElementById("setting-nav-link").setAttribute("aria-expanded", "true");
+  document.getElementById("collapseTwo").classList.add('show');
+  document.getElementById("mfa-setting").classList.add('active');
+</script>
 
 {% endblock %}

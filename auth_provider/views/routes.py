@@ -36,6 +36,34 @@ def dashboard():
     )
 
 
+@main_bp.route('/profile', methods=['GET'])
+@login_required
+def profile():    
+    """Logged-in User Dashboard."""
+    user= current_user
+    n_clients = OAuth2Client.query.filter_by(user_id = user.id).count()
+    return render_template(
+        'profile.html',
+        title='Profile',
+        template='dashboard-template',
+        user= user, n_clients = n_clients,
+        body="Your personal profile"
+    )
+
+@main_bp.route('/activities/login_history', methods=['GET'])
+@login_required
+def login_history():    
+    """Logged-in User Dashboard."""
+    user= current_user
+    return render_template(
+        'login_history.html',
+        title='Login History',
+        template='dashboard-template',
+        user= user,
+        body="Login history"
+    )
+
+
 @main_bp.route("/logout")
 @login_required
 def logout():
@@ -266,7 +294,7 @@ def mfa_setup():
             devices = user.token_devices
             active_devices = [device for device in devices if device.is_active ]
             if len(active_devices)==0:
-                flash('Error: You have no active token device. Setup a new device to enable 2FA')
+                flash('Error: You have no active token device. Setup a new device to enable 2FA.')
             else:
                 user.mfa = True
                 user.updated_at = datetime.now()

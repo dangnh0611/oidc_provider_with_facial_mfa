@@ -1,0 +1,22 @@
+{% extends "dashboard.html" %}
+
+{% block pagestyles %}
+<link href="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.min.css" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/dashboardcontent.css') }}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block dashboardcontent %}
+Not implemented
+{% endblock %}
+
+
+
+{% block additionalscripts %}
+<script>
+    document.getElementById("activity-nav-item").classList.add('active');
+    document.getElementById("activity-nav-link").setAttribute("aria-expanded", "true");
+    document.getElementById("collapseUtilities").classList.add('show');
+    document.getElementById("login-history").classList.add('active');
+  </script>
+
+{% endblock %}

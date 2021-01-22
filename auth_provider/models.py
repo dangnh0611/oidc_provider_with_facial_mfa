@@ -10,6 +10,7 @@ from authlib.integrations.sqla_oauth2 import (
 )
 import json
 from datetime import datetime
+from sqlalchemy.sql import functions as sqla_funcs 
 
 class User(UserMixin, db.Model):
 	"""User account model."""
@@ -39,19 +40,21 @@ class User(UserMixin, db.Model):
 		db.DateTime,
 		index=False,
 		unique=False,
-		nullable=True
+		nullable=True,
+		server_default=sqla_funcs.now()
 	)
 	updated_at = db.Column(
 		db.DateTime,
 		index=False,
 		unique=False,
-		nullable=True
+		nullable=True,
+		onupdate = sqla_funcs.now()
 	)
 	last_login = db.Column(
 		db.DateTime,
 		index=False,
 		unique=False,
-		nullable=True
+		nullable=True,
 	)
 	mfa = db.Column(
 		db.Boolean,
@@ -132,13 +135,15 @@ class TokenDevice(db.Model):
 		db.DateTime,
 		index=False,
 		unique=False,
-		nullable=False
+		nullable=False,
+		server_default=sqla_funcs.now()
 	)
 	updated_at = db.Column(
 		db.DateTime,
 		index=False,
 		unique=False,
-		nullable=True
+		nullable=True,
+		onupdate = sqla_funcs.now()
 	)
 	last_login = db.Column(
 		db.DateTime,
@@ -211,7 +216,8 @@ class RegistrationRequest(db.Model):
 		db.DateTime,
 		index=False,
 		unique=False,
-		nullable=True
+		nullable=True,
+		server_default=sqla_funcs.now()
 	)
 
 	is_success = db.Column(
@@ -267,7 +273,8 @@ class AccessRequest(db.Model):
 		db.DateTime,
 		index=False,
 		unique=False,
-		nullable=True
+		nullable=True,
+		server_default=sqla_funcs.now()
 	)
 
 	is_success = db.Column(

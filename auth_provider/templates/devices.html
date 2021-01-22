@@ -199,13 +199,33 @@
 
 
 <script id='show-qr-template' type='text/template'>
-  <div>
+  <!-- <div>
     <h1>Use your device with DoneLogin app installed to scan this QR code below</h1>
     <p><img id="qrcode" src="{{ url_for('main_bp.qrcode') }}"></p>
     <hr>
     <div style="padding-left: 30px; ">
       <div class="loader" style='display:inline-block;'></div>
       <h3 style='display:inline-block; padding-left: 30px;' >Waiting for your device setup..</h3>
+    </div>
+  </div> -->
+
+  <div class="card shadow mb-4">
+    <!-- Card Header - Accordion -->
+    <a href="#collapseCardExample" class="d-block card-header py-3" data-toggle="collapse"
+        role="button" aria-expanded="true" aria-controls="collapseCardExample">
+        <h4 class="m-0 font-weight-bold text-primary">
+          Use your device with DoneLogin app installed to scan this QR code below</h4>
+    </a>
+    <!-- Card Content - Collapse -->
+    <div class="collapse show" id="collapseCardExample">
+        <div class="card-body">
+          <img id="qrcode" src="{{ url_for('main_bp.qrcode') }}">
+          <hr>
+          <div style="padding-left: 30px;">
+            <div class="loader" style='display:inline-block;'></div>
+            <h4 class="m-0 text-primary" style='display:inline-block; padding-left: 30px;' >Waiting for your device setup..</h4>
+          </div>
+        </div>
     </div>
   </div>
 
@@ -278,6 +298,13 @@
     content.innerHTML = template();
     eval(document.querySelector("#after-load-qr-script").innerHTML);
   }
+</script>
+
+<script>
+  document.getElementById("setting-nav-item").classList.add('active');
+  document.getElementById("setting-nav-link").setAttribute("aria-expanded", "true");
+  document.getElementById("collapseTwo").classList.add('show');
+  document.getElementById("device-manager").classList.add('active');
 </script>
 
 {% endblock %}
