@@ -36,6 +36,8 @@ def signup():
                 email=form.email.data,
             )
             user.set_password(form.password.data)
+            session['user_id'] = user.get_user_id()
+            session.modified = True
 
             # sent email
             token = generate_security_email_token(user.email, salt = 'confirm_account')
@@ -46,8 +48,6 @@ def signup():
 
             db.session.add(user)
             db.session.commit()  # Create new user
-            session['user_id'] = user.get_user_id()
-            session.modified = True
             return redirect(url_for('auth_bp.confirm_email_warning'))
         else:
             flash('A user already exists with that email address.')

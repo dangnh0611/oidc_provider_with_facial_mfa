@@ -106,6 +106,23 @@ def clients():
         clients_list.append([client, {'client_info': client.client_info, 'client_metadata': client.client_metadata}])
     return render_template('clients.html', user = user, clients_list = clients_list)
 
+
+@main_bp.route('/clients/<client_id>', methods = ['GET', 'DELETE'])
+@login_required
+def client(client_id):
+    user = current_user
+    target_client = OAuth2Client.query.filter_by(id = client_id, user_id = user.id).first()
+    
+    if target_client is None:
+        flash('Invalid request!')
+        return jsonify({'status': 'fail', 'msg': 'Invalid request!'})
+    else:
+        db.session.delete(target_client)
+        db.session.commit()
+        flash(f'Removed {target_client.client_name} ({target_client.client_uri}) !')
+        return jsonify({'status': 'success'})
+
+
 @main_bp.route('/devices', methods=['GET'])
 @login_required
 def devices():
