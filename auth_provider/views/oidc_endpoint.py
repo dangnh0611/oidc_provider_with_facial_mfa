@@ -70,16 +70,21 @@ def issue_token():
 
 
 @oidc_bp.route('/api/me')
-@require_oauth('profile')
+@require_oauth('openid')
 def api_me():
     user = current_token.user
-    return jsonify(id=user.id, username=user.username)
+    return jsonify(id=user.id, username=user.name)
 
 
 # implement later
 @oidc_bp.route('/userinfo')
+@require_oauth('openid')
 def user_info():
-    return "No implementation."
+    user = current_token.user
+    scopes = current_token.scope
+    print(dir(current_token))
+    print(scopes)
+    return jsonify(id=user.id, username=user.name)
 
 
 # implement later

@@ -29,7 +29,8 @@
       {{ form.csrf_token }}
 
       <fieldset>
-        {{ form.confirm }} {{ form.confirm.label(style='display: inline') }}
+        {{ form.confirm(style= "width:25px;") }}
+         {{ form.confirm.label(style='display: inline-block;') }}
         {% if form.confirm.errors %}
           <ul class="errors">
             {% for error in form.confirm.errors %}

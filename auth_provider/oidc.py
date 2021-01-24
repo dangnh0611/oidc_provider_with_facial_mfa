@@ -43,7 +43,10 @@ def exists_nonce(nonce, req):
 
 
 def generate_user_info(user, scope):
-    return UserInfo(sub=str(user.id), name=user.name)
+    user_info = UserInfo(sub=user.id, name=user.name)
+    if 'email' in scope:
+        user_info['email'] = user.email
+    return user_info
 
 
 def create_authorization_code(client, grant_user, request):
@@ -95,7 +98,7 @@ class ImplicitGrant(_OpenIDImplicitGrant):
     def exists_nonce(self, nonce, request):
         return exists_nonce(nonce, request)
 
-    def get_jwt_config(self, grant):
+    def get_jwt_config(self):
         return DUMMY_JWT_CONFIG
 
     def generate_user_info(self, user, scope):
