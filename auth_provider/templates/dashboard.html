@@ -109,6 +109,7 @@
                         <!-- <h6 class="collapse-header">Login Screens:</h6> -->
                         <a id = "your-app" class="collapse-item" href="{{ url_for('main_bp.clients') }}">Your Apps</a>
                         <a id = "create-new-app" class="collapse-item" href="{{ url_for('main_bp.create_client') }}">Create new app</a>
+                        <a class="collapse-item" target="blank" href="{{ url_for('oidc_bp.wellknown_configuration') }}">OIDC provider discovery</a>
                     </div>
                 </div>
             </li>

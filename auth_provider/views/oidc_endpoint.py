@@ -69,22 +69,19 @@ def issue_token():
     return authorization.create_token_response()
 
 
-@oidc_bp.route('/api/me')
-@require_oauth('openid')
-def api_me():
-    user = current_token.user
-    return jsonify(id=user.id, username=user.name)
 
-
-# implement later
 @oidc_bp.route('/userinfo')
 @require_oauth('openid')
 def user_info():
     user = current_token.user
-    scopes = current_token.scope
-    print(dir(current_token))
+    scopes = current_token.scope.split()
     print(scopes)
-    return jsonify(id=user.id, username=user.name)
+    ret= { "sub": user.id}
+    if 'preferred_username' in scopes:
+        ret['preferred_username'] = user.name
+    if 'email' in scopes:
+        ret['email'] = user.email
+    return jsonify(ret)
 
 
 # implement later
@@ -119,7 +116,6 @@ def wellknown_configuration():
             "code id_token",
             "token id_token",
             "code token id_token",
-            "none"
         ],
         "id_token_signing_alg_values_supported": [
             "RS256"

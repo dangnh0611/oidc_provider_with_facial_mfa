@@ -32,7 +32,7 @@
         {{ form.client_name.label }}
         {{ form.client_name(placeholder='') }}
         {% if form.client_name.errors %}
-        <ul class="errors">
+        <ul class="errors" style = "margin-top: 10px;">
           {% for error in form.client_name.errors %}
           <li>{{ error }}</li>{% endfor %}
         </ul>
@@ -43,7 +43,7 @@
         {{ form.client_uri.label }}
         {{ form.client_uri(placeholder='') }}
         {% if form.client_uri.errors %}
-        <ul class="errors">
+        <ul class="errors" style = "margin-top: 10px;">
           {% for error in form.client_uri.errors %}
           <li>{{ error }}</li>{% endfor %}
         </ul>
@@ -54,7 +54,7 @@
         {{ form.redirect_uri.label }}
         {{ form.redirect_uri(cols= 50, rows = 3)}}
         {% if form.redirect_uri.errors %}
-        <ul class="errors">
+        <ul class="errors" style = "margin-top: 10px;">
           {% for error in form.redirect_uri.errors %}
           <li>{{ error }}</li>{% endfor %}
         </ul>
@@ -65,7 +65,7 @@
         {{ form.allowed_scope.label }}
         {{ form.allowed_scope(class="chosen-select")}}
         {% if form.allowed_scope.errors %}
-        <ul class="errors">
+        <ul class="errors" style = "margin-top: 10px;">
           {% for error in form.allowed_scope.errors %}
           <li>{{ error }}</li>{% endfor %}
         </ul>
@@ -76,7 +76,7 @@
         {{ form.allowed_grant_type.label }}
         {{ form.allowed_grant_type(class="chosen-select")}}
         {% if form.allowed_grant_type.errors %}
-        <ul class="errors">
+        <ul class="errors" style = "margin-top: 10px;">
           {% for error in form.allowed_grant_type.errors %}
           <li>{{ error }}</li>{% endfor %}
         </ul>
@@ -87,7 +87,7 @@
         {{ form.allowed_response_type.label }}
         {{ form.allowed_response_type(class="chosen-select")}}
         {% if form.allowed_response_type.errors %}
-        <ul class="errors">
+        <ul class="errors" style = "margin-top: 10px;">
           {% for error in form.allowed_response_type.errors %}
           <li>{{ error }}</li>{% endfor %}
         </ul>
@@ -98,7 +98,7 @@
         {{ form.token_endpoint_auth_method.label }}
         {{ form.token_endpoint_auth_method(class="chosen-select") }}
         {% if form.token_endpoint_auth_method.errors %}
-        <ul class="errors">
+        <ul class="errors" style = "margin-top: 10px;">
           {% for error in form.token_endpoint_auth_method.errors %}
           <li>{{ error }}</li>{% endfor %}
         </ul>

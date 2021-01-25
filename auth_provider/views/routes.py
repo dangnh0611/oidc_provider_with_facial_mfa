@@ -109,14 +109,14 @@ def create_client():
             db.session.add(client)
             db.session.commit()
             return redirect('/clients')
-    else:
-        return render_template(
-            'create_client.html',
-            title='Create a client.',
-            form=form,
-            user= user,
-            template='signup-page',
-        )
+
+    return render_template(
+        'create_client.html',
+        title='Create a client.',
+        form=form,
+        user= user,
+        template='signup-page',
+    )
 
 
 @main_bp.route('/clients', methods=('GET', 'POST'))

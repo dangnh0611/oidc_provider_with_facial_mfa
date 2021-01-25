@@ -132,6 +132,13 @@ class AuthorizationForm(FlaskForm):
     submit=SubmitField('Submit')
 
 
+
+def validate_client_allowed_scope(form, field):
+    scopes = field.data
+    if 'openid' not in scopes:
+        raise ValidationError('OpenID Connect scope must include "openid".')
+    
+
 class CreateClientForm(FlaskForm):
     """Create Client Form."""
     client_name= StringField(
@@ -144,7 +151,9 @@ class CreateClientForm(FlaskForm):
         )
     allowed_scope= SelectMultipleField (
         'Allowed Scope', 
-        validators=[DataRequired()], choices=[('openid', 'Open ID Connect (openid)'), ('profile', 'Profile (profile)'), ('email', 'Email (email)'), ('phone', 'Phone number (phone)'), ('address', 'Address (address)')]
+        validators=[DataRequired(), validate_client_allowed_scope], choices=[('openid', 'Open ID Connect (openid)'), ('sub', 'User Identifier (sub)'),
+         ('preferred_username', 'User Name (preferred_username)'), ('email', 'Email (email)'), ('phone_number', 'Phone number (phone_number)'),
+          ('address', 'Address (address)')], default = ['openid']
         )
     redirect_uri= TextAreaField(
         'Redirect URIs', 
@@ -153,14 +162,15 @@ class CreateClientForm(FlaskForm):
     allowed_grant_type=SelectMultipleField(
         'Allowed Grant Type', 
         validators=[DataRequired()],
-        choices=[('authorization_code', 'Authorization Code Grant'), ('refresh_token', 'Refresh Token')]
+        choices=[('authorization_code', 'Authorization Code Grant'), ('refresh_token', 'Refresh Token')],
         )
     # Change later
     allowed_response_type=SelectMultipleField(
         'Allowed Response Type',
         validators=[DataRequired()],
-        choices=[('code', 'code'),  ('id_token', 'id_token'), ('id_token token', 'id_token token'),
-         ('code id_token', 'code id_token'), ('code token', 'code token'), ('code id_token token', 'code id_token token')]
+        choices=[('code', 'code (Authorization code flow)'),  ('id_token', 'id_token (Implicit flow)'), ('id_token token',
+         'id_token token (Implicit flow)'), ('code id_token', 'code id_token (Hybrid flow)'),
+          ('code token', 'code token (Hybrid flow)'), ('code id_token token', 'code id_token token (Hybrid flow)')]
     )
     token_endpoint_auth_method=SelectField(
         'Token Endpoint Authentication Method',
