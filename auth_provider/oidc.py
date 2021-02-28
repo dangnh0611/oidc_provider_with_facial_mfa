@@ -18,22 +18,8 @@ from werkzeug.security import gen_salt
 from .models import db, User
 from .models import OAuth2Client, OAuth2AuthorizationCode, OAuth2Token
 from authlib.oauth2.rfc7636 import CodeChallenge
-from authlib.jose import JsonWebKey
+from flask import current_app
 
-
-DUMMY_JWT_CONFIG = {}
-
-with open('jwtRS256.key', 'rb') as f:
-    key_data = f.read()
-    key = JsonWebKey.import_key(key_data, options= {'kty': 'RSA'})
-    key_info = key.as_dict()
-    key_info.update({'use': 'sig', 'alg': 'RS256', 'kid': 'the-constant-one' })
-    DUMMY_JWT_CONFIG = {
-        'key': key_info,
-        'alg': 'RS256',
-        'iss': 'https://donelogin.ai',
-        'exp': 3600,
-    }
 
 def exists_nonce(nonce, req):
     exists = OAuth2AuthorizationCode.query.filter_by(
@@ -43,9 +29,7 @@ def exists_nonce(nonce, req):
 
 
 def generate_user_info(user, scope):
-    user_info = UserInfo(sub=user.id, name=user.name)
-    if 'email' in scope:
-        user_info['email'] = user.email
+    user_info = UserInfo(sub=user.id, email = user.email)
     return user_info
 
 
@@ -88,7 +72,7 @@ class OpenIDCode(_OpenIDCode):
         return exists_nonce(nonce, request)
 
     def get_jwt_config(self, grant):
-        return DUMMY_JWT_CONFIG
+        return current_app.config['OIDC_JWT_CONFIG']
 
     def generate_user_info(self, user, scope):
         return generate_user_info(user, scope)
@@ -99,7 +83,7 @@ class ImplicitGrant(_OpenIDImplicitGrant):
         return exists_nonce(nonce, request)
 
     def get_jwt_config(self):
-        return DUMMY_JWT_CONFIG
+        return current_app.config['OIDC_JWT_CONFIG']
 
     def generate_user_info(self, user, scope):
         return generate_user_info(user, scope)
@@ -113,7 +97,7 @@ class HybridGrant(_OpenIDHybridGrant):
         return exists_nonce(nonce, request)
 
     def get_jwt_config(self):
-        return DUMMY_JWT_CONFIG
+        return current_app.config['OIDC_JWT_CONFIG']
 
     def generate_user_info(self, user, scope):
         return generate_user_info(user, scope)

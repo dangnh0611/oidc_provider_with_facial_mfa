@@ -1,8 +1,9 @@
+<h1>Demo Relying Party (RP) app on localhost:3000</h1>
 {% if user %}
 <pre>
-{{ user }}
+{{ user | pprint }}
 </pre>
-<a href="/logout">logout</a>
+<a href="/logout">Logout</a>
 {% else %}
-<a href="/login">login</a>
+<a href="/login">Login with DOneLogin</a>
 {% endif %}

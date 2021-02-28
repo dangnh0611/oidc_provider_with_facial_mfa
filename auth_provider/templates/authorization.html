@@ -18,11 +18,11 @@
       </div>
     {% endfor %}
 
-    <h1>Access Request</h1>
-    <strong>{{grant.client.client_name}} ({{ grant.client.client_uri }}) want to access the following resources:</strong>
+    <h1>Authorization Request</h1>
+    <strong> <strong style= "color: red;">{{grant.client.client_name}} ({{ grant.client.client_uri }})</strong> want to access the following resources:</strong>
     <ul>
-        {% for scope in scopes %}
-        <li> {{scope}} </li>
+        {% for scope_id, scope_name in scopes.items() %}
+        <li> {{scope_name}} ({{scope_id}}) </li>
         {% endfor %}
     </ul>
     <form method="POST" action="">

@@ -3,14 +3,13 @@ from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA256
 import base64
 import firebase_admin
-from firebase_admin import messaging
-from firebase_admin import credentials
+from firebase_admin import messaging, credentials
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
 from flask_mail import Message
 from . import mail
 
-cred = credentials.Certificate("instance/donelogin-9f53f-firebase-adminsdk-sxu56-8682d3b594.json")
+cred = credentials.Certificate(current_app.config['FCM_CREDENTIALS'])
 firebase_admin.initialize_app(cred)
 
 

@@ -1,5 +1,5 @@
 """Routes for user authentication."""
-from flask import redirect, render_template, flash, Blueprint, request, url_for, session
+from flask import redirect, render_template, flash, Blueprint, request, url_for, session, current_app
 from ..models import db, User, AuthorizedClientUser
 from ..import login_manager
 from flask_login import current_user, login_required, logout_user
@@ -8,7 +8,7 @@ from authlib.integrations.flask_oauth2 import current_token
 from authlib.oauth2 import OAuth2Error
 from ..oidc import authorization, require_oauth
 from ..forms import AuthorizationForm
-from authlib.jose import JsonWebKey
+
 
 
 # Blueprint Configuration
@@ -18,23 +18,20 @@ oidc_bp = Blueprint(
     static_folder='static'
 )
 
-JWK_CONFIG = {}
-with open('jwtRS256.key.pub', 'rb') as f:
-    key_data = f.read()
-    key = JsonWebKey.import_key(key_data, options= {'kty': 'RSA'})
-    key_info = key.as_dict()
-    key_info.update({'use': 'sig', 'alg': 'RS256', 'kid': 'the-constant-one' })
-    JWK_CONFIG ={
-        "keys": [
-            key_info
-        ]
-    } 
+
+SCOPE2DESCRIPTIONS = {
+    'openid': 'Open ID Connect',
+    'sub': 'Your user identifier',
+    'preferred_username': 'Your user name',
+    'email': 'Your email',
+    'phone_number': 'Your phone number',
+    'address': 'Your address'
+}
 
 @oidc_bp.route('/oauth2/authorize', methods=['GET', 'POST'])
 @login_required
 def authorize():
     user = current_user
-    print('USER', user)
     form= AuthorizationForm()
     
     if request.method == 'GET':
@@ -47,10 +44,12 @@ def authorize():
         if authorized_or_not is None:
             session['client_id'] = client_id
             session.modified = True
+            scopes=grant.request.scope.split()
+            scopes = {scope: SCOPE2DESCRIPTIONS[scope] for scope in scopes}
             return render_template('authorization.html',
             form=form,
             template='login-page', user=user,
-            grant=grant, scopes=grant.request.scope.split())
+            grant=grant, scopes = scopes)
         else:
             return authorization.create_authorization_response(grant_user=user)
     
@@ -64,6 +63,7 @@ def authorize():
                 return authorization.create_authorization_response(grant_user=user)
         return '<h1>Access rejected! </h1>'
 
+
 @oidc_bp.route('/oauth2/token', methods=['POST'])
 def issue_token():
     return authorization.create_token_response()
@@ -75,7 +75,6 @@ def issue_token():
 def user_info():
     user = current_token.user
     scopes = current_token.scope.split()
-    print(scopes)
     ret= { "sub": user.id}
     if 'preferred_username' in scopes:
         ret['preferred_username'] = user.name
@@ -93,15 +92,14 @@ def revoke_token():
 # implement later
 @oidc_bp.route('/certs')
 def jwk_certs():
-    global JWK_CONFIG
-    return jsonify(JWK_CONFIG)
+    return jsonify(current_app.config['JWK_PUBLIC_CONFIG'])
 
 
 # Well-known OpenID configuration
 # Similar as https://accounts.google.com/.well-known/openid-configuration 
 @oidc_bp.route('/.well-known/openid-configuration')
 def wellknown_configuration():
-    CONFIG = {
+    WELL_KNOWN_CONFIG = {
         "issuer": "https://donelogin.ai",
         "authorization_endpoint": url_for('oidc_bp.authorize', _external = True),
         "token_endpoint": url_for('oidc_bp.issue_token', _external= True),
@@ -138,4 +136,4 @@ def wellknown_configuration():
             "refresh_token"
         ]
     }
-    return jsonify(CONFIG)
+    return jsonify(WELL_KNOWN_CONFIG)
