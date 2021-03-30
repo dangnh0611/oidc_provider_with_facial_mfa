@@ -1,5 +1,5 @@
 """Application entry point."""
-from auth_provider import create_app
+from sso_provider import create_app
 
 app = create_app()
 

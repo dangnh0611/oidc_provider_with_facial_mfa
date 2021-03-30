@@ -8,17 +8,13 @@ app = Flask(__name__)
 app.secret_key = 'a-secret-key'
 app.config.from_object('config')
 
-CONF_URL = 'https://192.168.11.2:5000/.well-known/openid-configuration'
 
-# CONF_URL = 'https://192.168.43.200:5000/.well-known/openid-configuration'
+
 oauth = OAuth(app)
 oauth.register(
-    name='donelogin',
-    server_metadata_url=CONF_URL,
-    client_kwargs={
-        'scope': 'openid email preferred_username',
-        "token_endpoint_auth_method": "client_secret_post"
-    }
+    name= 'donelogin',
+    server_metadata_url= app.config['DONELOGIN_CONFIG_URL'],
+    client_kwargs=app.config['DONELOGIN_CLIENT_KWARGS']
 )
 
 

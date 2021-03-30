@@ -1,5 +1,5 @@
 APScheduler==3.6.3
-Authlib==0.15.2
+Authlib==0.15.3
 blinker==1.4
 CacheControl==0.12.6
 cachelib==0.1.1

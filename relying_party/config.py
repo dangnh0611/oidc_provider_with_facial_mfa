@@ -1,6 +1,16 @@
-import os
+"""App config"""
 
-# App on localhost:3000 config
-DONELOGIN_CLIENT_ID = 'yDEAiym1x8zS5F5GkstBpJB0'
-DONELOGIN_CLIENT_SECRET = '8cYjWZb1fhmW2aUOgL47dNU1BdSzE9HHSeo9ayFQrGqxZ7wE'
+# SSO Provider Discovery endpoint
+DONELOGIN_CONFIG_URL = 'https://localhost:5000/.well-known/openid-configuration'
+
+#
+DONELOGIN_CLIENT_KWARGS= {
+    'scope': 'openid email preferred_username',
+    "token_endpoint_auth_method": "client_secret_post"
+}
+
+# CLIENT CREDENTIALS
+DONELOGIN_CLIENT_ID = 'client_id'
+DONELOGIN_CLIENT_SECRET = 'client_secret'
+
 
