@@ -132,4 +132,4 @@ dmypy.json
 instance/
 
 # sqlite database
-auth_provider/db.sqlite
+sso_provider/db.sqlite
