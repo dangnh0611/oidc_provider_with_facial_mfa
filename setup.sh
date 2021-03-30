@@ -3,6 +3,9 @@ mkdir instance
 
 # Fill this config file later
 echo """
+import os
+
+
 FLASK_ENV='development'
 SECRET_KEY=b'enter your secret key here. It should be random generated'
 DEBUG= True
@@ -10,6 +13,9 @@ DEBUG= True
 # gmail authentication
 MAIL_USERNAME = 'your email username'
 MAIL_PASSWORD = 'your email password'
+
+# FCM
+FCM_CREDENTIALS = os.path.join('instance', 'your_own_fcm_credentials.json')
 
 # Google reCAPCHA v2
 RECAPTCHA_PUBLIC_KEY= 'get your own from Google'

@@ -19,9 +19,6 @@ OAUTH2_JWT_ALG = 'HS256'
 PERMANENT_SESSION_LIFETIME = 1800
 
 
-# FCM
-FCM_CREDENTIALS = os.path.join("instance", "donelogin-9f53f-firebase-adminsdk-sxu56-8682d3b594.json")
-
 
 # mail settings
 MAIL_SERVER = 'smtp.gmail.com'
