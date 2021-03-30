@@ -1,4 +1,4 @@
-<a href="https://authlib.org/">
+<a href="https://github.com/dangnh0611/oidc_provider_with_facial_mfa">
 <img align="right" width="120" height="120" src="./sso_provider/static/img/logo.png">
 </a>
 
